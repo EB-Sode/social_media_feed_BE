@@ -1,0 +1,199 @@
+{
+  "info": {
+    "_postman_id": "b2e3f7e4-9d13-4db0-a1df-b8c45c123ab2",
+    "name": "Social Media App - GraphQL",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Signup",
+      "request": {
+        "method": "POST",
+        "header": [
+          {"key": "Content-Type", "value": "application/json"},
+          {"Key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"query\": \"mutation Signup($username: String!, $email: String!, $password: String!) { signup(username: $username, email: $email, password: $password) { user { id username email } } }\", \"variables\": { \"username\": \"demo\", \"email\": \"demo@example.com\", \"password\": \"password123\" } }"
+        },
+        "url": { "raw": "http://localhost:8000/graphql/", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["graphql"] }
+      }
+    },
+    {
+      "name": "Get All Users",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"query\": \"query { users { id username email bio } }\"}"
+        },
+        "url": {
+          "raw": "http://localhost:8000/graphql/", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["graphql"]
+        }
+      }
+    },
+    {
+      "name": "Login (Get JWT Token)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"query\": \"mutation Login($username: String!, $password: String!) { login(username: $username, password: $password) { token user { id username } } }\", \"variables\": {\"username\": \"John\", \"password\": \"pass123\"}}"
+        },
+        "url": { "raw": "http://localhost:8000/graphql/", "protocol": "http", "host": ["localhost"], "port": "8000", "path": ["graphql"] }
+      }
+    },
+
+    {
+      "name": "Get Feed",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { feed { id content createdAt createdBy { id username } } }\"\n}"
+        },
+        "url": { "raw": "http://localhost:8000/graphql/" }
+      }
+    },
+
+    {
+      "name": "Create Post",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"mutation ($content: String!) { createPost(content: $content) { post { id content } } }\",\n  \"variables\": {\n    \"content\": \"My first post from Postman!\"\n  }\n}"
+        },
+        "url": { "raw": "http://localhost:8000/graphql/" }
+      }
+    },
+
+    {
+      "name": "Upload Post Image",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoyfQ.XtHLnWu5aCChKspMNh261byJ8l-PxgyhaLVCWjbORAc}}" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "operations",
+              "value": "{\"query\": \"mutation ($file: Upload!) { uploadPostImage(file: $file) { success url } }\", \"variables\": {\"file\": null}}",
+              "type": "text"
+            },
+            {
+              "key": "map",
+              "value": "{\"0\": [\"variables.file\"]}",
+              "type": "text"
+            },
+            {
+              "key": "0",
+              "type": "file",
+              "src": "/path/to/your/image.jpg"
+            }
+          ]
+        },
+        "url": { "raw": "http://localhost:8000/graphql/" }
+      }
+    },
+
+    {
+      "name": "Follow User",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"mutation ($userId: ID!) { followUser(userId: $userId) { success } }\",\n  \"variables\": {\n    \"userId\": 2\n  }\n}"
+        },
+        "url": { "raw": "http://localhost:8000/graphql/" }
+      }
+    },
+
+    {
+      "name": "Like Post",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"mutation ($postId: ID!) { likePost(postId: $postId) { success } }\",\n  \"variables\": {\n    \"postId\": 1\n  }\n}"
+        },
+        "url": { "raw": "http://localhost:8000/graphql/" }
+      }
+    },
+
+    {
+      "name": "Create Comment",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"mutation ($postId: ID!, $text: String!) { createComment(postId: $postId, text: $text) { comment { id text } } }\",\n  \"variables\": {\n    \"postId\": 1,\n    \"text\": \"Nice post!\"\n  }\n}"
+        },
+        "url": { "raw": "http://localhost:8000/graphql/" }
+      }
+    },
+
+    {
+      "name": "Get Notifications",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"query\": \"query { notifications { id type message createdAt isRead } }\"\n}"
+        },
+        "url": { "raw": "http://localhost:8000/graphql/" }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
+

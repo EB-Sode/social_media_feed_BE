@@ -11,6 +11,7 @@ from apps.follows.schema import FollowMutation
 from apps.notifications.schema import NotificationQuery, NotificationMutation
 
 
+
 class Query(
     UserQuery,            # brings in user-related read queries (users, me)
     PostQuery,            # brings in post-related read queries (posts, post, feed)
@@ -33,3 +34,4 @@ class Mutation(
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)
+

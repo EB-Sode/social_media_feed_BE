@@ -17,7 +17,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from graphene_django.views import GraphQLView
+# from graphene_django.views import GraphQLView
+from apps.common.views import AuthenticatedGraphQLView
 
 from django.views.decorators.csrf import csrf_exempt
 
@@ -25,5 +26,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
 
     # Main GraphQL endpoint
-    path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
+    # path("graphql/", csrf_exempt(GraphQLView.as_view(graphiql=True))),
+    path("graphql/", AuthenticatedGraphQLView.as_view(graphiql=True)),
 ]

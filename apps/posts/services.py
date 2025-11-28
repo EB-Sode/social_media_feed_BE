@@ -7,6 +7,7 @@ This layer ensures that GraphQL remains thin and clean.
 
 from django.db.models import Q, Count
 from .models import Post, Like, Comment
+from apps.notifications.tasks import send_notification_task, send_notification_email
 
 
 def get_user_feed(user, limit=20, offset=0):
@@ -70,3 +71,33 @@ def create_comment(post, user, content):
         user=user,
         content=content
     )
+
+
+def like_post(user, post):
+    if post.likes.filter(user=user).exists():
+        return False
+
+    Like.objects.create(user=user, post=post)
+
+    send_notification_task.delay(
+        post.author.id,
+        f"{user.username} liked your post."
+    )
+
+    return True
+
+def add_comment(post, user, text):
+    comment = Comment.objects.create(
+        post=post,
+        user=user,
+        text=text
+    )
+
+    # Send email to the post owner
+    subject = "New Comment on Your Post"
+    message = f"{user.username} commented: {text}"
+    recipient = post.user.email
+
+    send_notification_email.delay(subject, message, recipient)
+
+    return comment

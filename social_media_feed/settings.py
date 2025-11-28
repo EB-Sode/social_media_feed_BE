@@ -30,8 +30,6 @@ DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 
-# Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -39,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    "django_celery_beat",
+    "django_celery_results",
 
     'graphene_django',
     "apps.users",
@@ -59,19 +60,15 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-GRAPHENE = {
-    # This tells GraphQL where the root schema lives
-    "SCHEMA": "social_media_feed.schema.schema",
-
-    # Enable GraphQL JWT middleware
-    "MIDDLEWARE": [
-        "graphql_jwt.middleware.JSONWebTokenMiddleware",
-    ],
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    )
 }
 
+
 AUTHENTICATION_BACKENDS = [
-    "graphql_jwt.backends.JSONWebTokenBackend",
-    "django.contrib.auth.backends.ModelBackend",  # default
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 GRAPHQL_JWT = {
@@ -163,3 +160,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/1"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
+
+# Email settings (example using Gmail)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
