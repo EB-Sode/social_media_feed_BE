@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 import os
 # import dj_database_url  # optional, for parsing DATABASE_URL
@@ -40,6 +41,8 @@ INSTALLED_APPS = [
 
     "django_celery_beat",
     "django_celery_results",
+    "rest_framework",     
+    "rest_framework_simplejwt",  
 
     'graphene_django',
     "apps.users",
@@ -58,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
 ]
 
 REST_FRAMEWORK = {
@@ -66,14 +70,28 @@ REST_FRAMEWORK = {
     )
 }
 
-
+GRAPHENE = {
+    "SCHEMA": "social_media_feed.schema.schema"
+}
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-GRAPHQL_JWT = {
-    "JWT_VERIFY_EXPIRATION": True,
-    "JWT_LONG_RUNNING_REFRESH_TOKEN": True,
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=3),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,  # Generate new refresh token on refresh
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens
+    'UPDATE_LAST_LOGIN': True,
+    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
 }
 
 ROOT_URLCONF = 'social_media_feed.urls'
@@ -89,6 +107,10 @@ DATABASES = {
     }
 }
 
+# Optional: Add token blacklist app for security
+INSTALLED_APPS += [
+    'rest_framework_simplejwt.token_blacklist',
+]
 
 TEMPLATES = [
     {

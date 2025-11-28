@@ -1,102 +1,148 @@
-# apps/users/mutations.py
-"""
-User mutations: Signup, Login (JWT example), UpdateProfile.
-
-Notes for junior dev:
- - Signup creates a user and returns the user object.
- - Login returns a token (this example uses PyJWT — you can replace it with
-   any JWT library or Django library you prefer).
- - UpdateProfile shows updating fields and saving the user.
-"""
-
+# mutations.py
 import graphene
-from django.contrib.auth import get_user_model, authenticate
-from django.conf import settings
-import jwt
-from graphene_file_upload.scalars import Upload  # if you want to support file uploads
+from django.contrib.auth import get_user_model
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+from .types import UserType
 
 User = get_user_model()
 
 
 class SignUpMutation(graphene.Mutation):
-    """
-    Create a new user. Real projects require email validation, password strength check, etc.
-    """
-    user = graphene.Field(lambda: graphene.NonNull(lambda: UserType))
-
     class Arguments:
         username = graphene.String(required=True)
         email = graphene.String(required=True)
         password = graphene.String(required=True)
-        bio = graphene.String(required=False)
-        profile_image = Upload(required=False)  # optional file upload
+        bio = graphene.String()
 
-    def mutate(self, info, username, email, password, bio=None, profile_image=None):
-        # Basic creation flow; add validations as needed
-        user = User(username=username, email=email)
-        user.set_password(password)
-        if bio:
-            user.bio = bio
-        if profile_image:
-            user.profile_image = profile_image
-        user.save()
-        return SignUpMutation(user=user)
+    user = graphene.Field(UserType)
+    token = graphene.String()
+    refresh_token = graphene.String()
+
+    def mutate(self, info, username, email, password, bio=None):
+        # Check if user exists
+        if User.objects.filter(username=username).exists():
+            raise Exception("Username already exists")
+        
+        if User.objects.filter(email=email).exists():
+            raise Exception("Email already exists")
+        
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            bio=bio or ""
+        )
+        
+        # Generate tokens using rest_framework_simplejwt
+        refresh = RefreshToken.for_user(user)
+        
+        return SignUpMutation(
+            user=user,
+            token=str(refresh.access_token),
+            refresh_token=str(refresh)
+        )
 
 
 class LoginMutation(graphene.Mutation):
-    """
-    Basic login mutation returning a JWT token.
-    Requires PyJWT (pip install PyJWT).
-    For production: add token expiry, refresh tokens, and revocation strategy.
-    """
-    token = graphene.String()
-    user = graphene.Field(lambda: graphene.NonNull(lambda: UserType))
-
     class Arguments:
         username = graphene.String(required=True)
         password = graphene.String(required=True)
 
+    user = graphene.Field(UserType)
+    token = graphene.String()
+    refresh_token = graphene.String()
+
     def mutate(self, info, username, password):
-        # Use Django's authenticate helper
-        user = authenticate(username=username, password=password)
-        if user is None:
-            raise Exception("Invalid username or password")
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            raise Exception("Invalid credentials")
+        
+        if not user.check_password(password):
+            raise Exception("Invalid credentials")
+        
+        # Generate tokens using rest_framework_simplejwt
+        refresh = RefreshToken.for_user(user)
+        
+        return LoginMutation(
+            user=user,
+            token=str(refresh.access_token),  # This will have 'exp' claim
+            refresh_token=str(refresh)
+        )
 
-        # Example: Simple JWT token (no refresh, no claims beyond user id)
-        payload = {"user_id": user.id}
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
-        # On PyJWT >= 2.0 token is bytes; ensure str
-        if isinstance(token, bytes):
-            token = token.decode("utf-8")
+class RefreshTokenMutation(graphene.Mutation):
+    class Arguments:
+        refresh_token = graphene.String(required=True)
 
-        return LoginMutation(token=token, user=user)
+    token = graphene.String()
+    refresh_token = graphene.String()
+
+    def mutate(self, info, refresh_token):
+        try:
+            # Create refresh token object
+            refresh = RefreshToken(refresh_token)
+            
+            # Generate new access token
+            new_access_token = str(refresh.access_token)
+            
+            # If ROTATE_REFRESH_TOKENS is True, this generates a new refresh token
+            if hasattr(refresh, 'set_jti'):
+                refresh.set_jti()
+                refresh.set_exp()
+                new_refresh_token = str(refresh)
+            else:
+                new_refresh_token = refresh_token
+            
+            return RefreshTokenMutation(
+                token=new_access_token,
+                refresh_token=new_refresh_token
+            )
+        except TokenError as e:
+            raise Exception(f"Invalid or expired refresh token: {str(e)}")
 
 
 class UpdateProfileMutation(graphene.Mutation):
-    """
-    Allow the authenticated user to update their own profile.
-    """
-    user = graphene.Field(lambda: graphene.NonNull(lambda: UserType))
-
     class Arguments:
-        username = graphene.String(required=False)
-        bio = graphene.String(required=False)
-        profile_image = Upload(required=False)
+        bio = graphene.String()
+        email = graphene.String()
+        profile_image = graphene.String()  # URL or base64
 
-    def mutate(self, info, username=None, bio=None, profile_image=None):
+    user = graphene.Field(UserType)
+
+    def mutate(self, info, bio=None, email=None, profile_image=None):
         user = info.context.user
-        if user.is_anonymous:
+        
+        if not user.is_authenticated:
             raise Exception("Authentication required")
-
-        if username:
-            user.username = username
+        
         if bio is not None:
             user.bio = bio
+        
+        if email is not None:
+            if User.objects.filter(email=email).exclude(id=user.id).exists():
+                raise Exception("Email already in use")
+            user.email = email
+        
         if profile_image is not None:
             user.profile_image = profile_image
+        
         user.save()
         return UpdateProfileMutation(user=user)
 
 
-# If using UserType in the same file, import it safely to avoid circular imports.
-from .schema import UserType  # local import (safe because UserType is simple)
+class LogoutMutation(graphene.Mutation):
+    class Arguments:
+        refresh_token = graphene.String(required=True)
+
+    success = graphene.Boolean()
+
+    def mutate(self, info, refresh_token):
+        try:
+            # Blacklist the refresh token
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return LogoutMutation(success=True)
+        except TokenError:
+            raise Exception("Invalid or expired refresh token")

@@ -11,8 +11,6 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.conf import settings
 from apps.notifications.tasks import send_notification_task
-from jwt.exceptions import ExpiredSignatureError, DecodeError
-import jwt
 
 User = get_user_model()
 
@@ -59,18 +57,3 @@ def follow_user(follower, target_user):
     )
 
     return True
-
-
-def get_user_from_token(token: str):
-    """
-    Decode a JWT and return the user.
-    """
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        user_id = payload.get("user_id")
-        if not user_id:
-            return None
-        user = User.objects.get(id=user_id)
-        return user
-    except (ExpiredSignatureError, DecodeError, User.DoesNotExist):
-        return None

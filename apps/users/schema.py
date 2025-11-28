@@ -11,7 +11,6 @@ from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .types import UserType
-from .services import get_user_from_token
 
 
 User = get_user_model()
@@ -44,20 +43,11 @@ class UserQuery(graphene.ObjectType):
 
 
 class UserMutation(graphene.ObjectType):
-    from .mutations import SignUpMutation, LoginMutation, UpdateProfileMutation
+    from .mutations import SignUpMutation, LoginMutation, UpdateProfileMutation, RefreshTokenMutation
     signup = SignUpMutation.Field()
     login = LoginMutation.Field()
     update_profile = UpdateProfileMutation.Field()
+    refresh_token = RefreshTokenMutation.Field()
 
 
-class Query(graphene.ObjectType):
-    me = graphene.Field(UserType)
 
-    def resolve_me(self, info):
-        auth = info.context.headers.get("Authorization")
-        if not auth:
-            return None
-        # "Bearer <token>"
-        token = auth.split(" ")[1] if " " in auth else auth
-        user = get_user_from_token(token)
-        return user
