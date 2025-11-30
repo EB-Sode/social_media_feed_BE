@@ -1,0 +1,565 @@
+{
+  "info": {
+    "_postman_id": "social-media-graphql-collection",
+    "name": "Social Media App - GraphQL (Complete)",
+    "description": "Complete GraphQL API collection for Social Media App with SimpleJWT authentication",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation Signup($username: String!, $email: String!, $password: String!, $bio: String) { signup(username: $username, email: $email, password: $password, bio: $bio) { user { id username email bio } token refreshToken } }\",\n  \"variables\": {\n    \"username\": \"newuser\",\n    \"email\": \"newuser@example.com\",\n    \"password\": \"SecurePass123!\",\n    \"bio\": \"Hello, I'm new here!\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.data && response.data.login) {",
+                  "  pm.collectionVariables.set('access_token', response.data.login.token);",
+                  "  pm.collectionVariables.set('refresh_token', response.data.login.refreshToken);",
+                  "  console.log('Tokens saved to collection variables');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation Login($username: String!, $password: String!) { login(username: $username, password: $password) { user { id username email } token refreshToken } }\",\n  \"variables\": {\n    \"username\": \"Kuyet\",\n    \"password\": \"testpass222\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response.data && response.data.refreshToken) {",
+                  "  pm.collectionVariables.set('access_token', response.data.refreshToken.token);",
+                  "  pm.collectionVariables.set('refresh_token', response.data.refreshToken.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation RefreshToken($refreshToken: String!) { refreshToken(refreshToken: $refreshToken) { token refreshToken } }\",\n  \"variables\": {\n    \"refreshToken\": \"{{refresh_token}}\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation Logout($refreshToken: String!) { logout(refreshToken: $refreshToken) { success } }\",\n  \"variables\": {\n    \"refreshToken\": \"{{refresh_token}}\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { users { id username email bio profileImage createdAt } }\"\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get Current User (Me)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { me { id username email bio profileImage createdAt } }\"\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Search Users",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query SearchUsers($query: String!) { searchUsers(query: $query) { id username email bio } }\",\n  \"variables\": {\n    \"query\": \"john\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation UpdateProfile($bio: String, $email: String, $profileImage: String) { updateProfile(bio: $bio, email: $email, profileImage: $profileImage) { user { id username email bio profileImage } } }\",\n  \"variables\": {\n    \"bio\": \"Updated bio!\",\n    \"email\": \"newemail@example.com\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "Get All Posts",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetPosts($limit: Int, $offset: Int) { posts(limit: $limit, offset: $offset) { id content image author { id username profileImage } likesCount commentsCount isLikedByUser createdAt } }\",\n  \"variables\": {\n    \"limit\": 20,\n    \"offset\": 0\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get Single Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetPost($id: ID!) { post(id: $id) { id content image author { id username } likesCount commentsCount isLikedByUser createdAt } }\",\n  \"variables\": {\n    \"id\": \"1\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get Feed",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetFeed($limit: Int, $offset: Int) { feed(limit: $limit, offset: $offset) { id content image author { id username profileImage } likesCount commentsCount isLikedByUser createdAt } }\",\n  \"variables\": {\n    \"limit\": 20,\n    \"offset\": 0\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get User Posts",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetUserPosts($userId: ID!, $limit: Int, $offset: Int) { userPosts(userId: $userId, limit: $limit, offset: $offset) { id content likesCount commentsCount createdAt } }\",\n  \"variables\": {\n    \"userId\": \"2\",\n    \"limit\": 10,\n    \"offset\": 0\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Search Posts",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query SearchPosts($query: String!, $limit: Int) { posts(query: $query, limit: $limit) { id content author { username } likesCount commentsCount } }\",\n  \"variables\": {\n    \"query\": \"hello\",\n    \"limit\": 10\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation CreatePost($content: String!) { createPost(content: $content) { post { id content author { username } likesCount commentsCount createdAt } } }\",\n  \"variables\": {\n    \"content\": \"My first post from Postman!\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Update Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation UpdatePost($postId: ID!, $content: String) { updatePost(postId: $postId, content: $content) { post { id content } } }\",\n  \"variables\": {\n    \"postId\": \"1\",\n    \"content\": \"Updated post content\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation DeletePost($postId: ID!) { deletePost(postId: $postId) { success } }\",\n  \"variables\": {\n    \"postId\": \"1\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Likes",
+      "item": [
+        {
+          "name": "Like/Unlike Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation LikePost($postId: ID!) { likePost(postId: $postId) { success message post { id likesCount isLikedByUser } } }\",\n  \"variables\": {\n    \"postId\": \"1\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get Post Likes",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetLikes($postId: ID!) { likes(postId: $postId) { id user { id username } createdAt } }\",\n  \"variables\": {\n    \"postId\": \"1\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "item": [
+        {
+          "name": "Get Post Comments",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetComments($postId: ID!) { comments(postId: $postId) { id content author { id username } createdAt } }\",\n  \"variables\": {\n    \"postId\": \"1\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Create Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation CreateComment($postId: ID!, $content: String!) { createComment(postId: $postId, content: $content) { success comment { id content author { username } createdAt } } }\",\n  \"variables\": {\n    \"postId\": \"1\",\n    \"content\": \"Nice post!\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Update Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation UpdateComment($commentId: ID!, $content: String!) { updateComment(commentId: $commentId, content: $content) { success comment { id content } } }\",\n  \"variables\": {\n    \"commentId\": \"1\",\n    \"content\": \"Updated comment text\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation DeleteComment($commentId: ID!) { deleteComment(commentId: $commentId) { success } }\",\n  \"variables\": {\n    \"commentId\": \"1\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Follows",
+      "item": [
+        {
+          "name": "Follow User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation FollowUser($userId: ID!) { followUser(userId: $userId) { success follow { id follower { username } followed { username } } } }\",\n  \"variables\": {\n    \"userId\": \"2\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Unfollow User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation UnfollowUser($userId: ID!) { unfollowUser(userId: $userId) { success } }\",\n  \"variables\": {\n    \"userId\": \"2\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get Followers",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetFollowers($userId: ID!) { followers(userId: $userId) { id follower { id username bio } createdAt } }\",\n  \"variables\": {\n    \"userId\": \"2\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get Following",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetFollowing($userId: ID!) { following(userId: $userId) { id followed { id username bio } createdAt } }\",\n  \"variables\": {\n    \"userId\": \"2\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get Follow Stats",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query GetFollowStats($userId: ID!) { followStats(userId: $userId) { followersCount followingCount isFollowing isFollowedBy } }\",\n  \"variables\": {\n    \"userId\": \"2\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Check if Following",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query IsFollowing($userId: ID!) { isFollowing(userId: $userId) }\",\n  \"variables\": {\n    \"userId\": \"2\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Get Notifications",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { notifications { id notificationType message isRead sender { id username } post { id content } createdAt } }\"\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Get Unread Notifications",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"query { unreadNotifications { id notificationType message sender { username } createdAt } }\"\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation MarkAsRead($notificationId: ID!) { markAsRead(notificationId: $notificationId) { success notification { id isRead } } }\",\n  \"variables\": {\n    \"notificationId\": \"1\"\n  }\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"mutation { markAllAsRea { success count } }\"\n}"
+            },
+            "url": "http://localhost:8000/graphql/"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

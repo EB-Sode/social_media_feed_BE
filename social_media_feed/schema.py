@@ -7,15 +7,16 @@ import graphene
 
 from apps.users.schema import UserQuery, UserMutation
 from apps.posts.schema import PostQuery, PostMutation
-from apps.follows.schema import FollowMutation
+from apps.follows.schema import FollowMutation, FollowQuery
 from apps.notifications.schema import NotificationQuery, NotificationMutation
 
 
 
 class Query(
-    UserQuery,            # brings in user-related read queries (users, me)
-    PostQuery,            # brings in post-related read queries (posts, post, feed)
-    NotificationQuery,    # brings in notification read queries
+    UserQuery,         
+    PostQuery,            
+    NotificationQuery,  
+    FollowQuery,
     graphene.ObjectType
 ):
     """Aggregated Query for the whole service."""
@@ -23,10 +24,10 @@ class Query(
 
 
 class Mutation(
-    UserMutation,         # user mutations (signup, login, update)
-    PostMutation,         # post mutations (create/update/delete/like/comment)
-    FollowMutation,       # follow/unfollow
-    NotificationMutation, # mark notifications read
+    UserMutation,       
+    PostMutation,       
+    FollowMutation, 
+    NotificationMutation,
     graphene.ObjectType
 ):
     """Aggregated Mutation for the whole service."""

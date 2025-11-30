@@ -1,61 +1,67 @@
-# apps/follows/mutations.py
-"""
-Follow and unfollow mutations.
-Use the Follow model (follower -> followed).
-The mutations return a simple success boolean and optionally the Follow object.
-"""
-
-import graphene
 from django.shortcuts import get_object_or_404
-from django.db import IntegrityError
 from django.contrib.auth import get_user_model
-
+from django.core.exceptions import ValidationError
+import graphene
+from .types import FollowType
 from .models import Follow
+from .services import follow_user, unfollow_user
+from apps.notifications.models import Notification
 
 User = get_user_model()
 
 
 class FollowUserMutation(graphene.Mutation):
     success = graphene.Boolean()
-    # follow = graphene.Field(lambda: graphene.NonNull(lambda: FollowType))
     follow = graphene.Field(lambda: FollowType)
 
     class Arguments:
-        user_id = graphene.Int(required=True)  # ID of the user to follow
+        user_id = graphene.ID(required=True)
 
     def mutate(self, info, user_id):
         follower = info.context.user
         if follower.is_anonymous:
             raise Exception("Authentication required")
 
-        followed = get_object_or_404(User, pk=user_id)
-        if follower == followed:
-            raise Exception("You cannot follow yourself")
-
+        followed = get_object_or_404(User, pk=int(user_id))
+        
+        # Use the service function
         try:
-            follow = Follow.objects.create(follower=follower, followed=followed)
-        except IntegrityError:
-            # already following
-            follow = Follow.objects.get(follower=follower, followed=followed)
+            follow_obj, created = follow_user(follower, followed)
+        except ValidationError as e:
+            raise Exception(str(e))
+        
+        if not created:
+            raise Exception("You are already following this user")
 
-        return FollowUserMutation(success=True, follow=follow)
+        # Create notification
+        Notification.objects.create(
+            recipient=followed,
+            sender=follower,
+            notification_type='follow',
+            message=f"{follower.username} started following you"
+        )
+
+        return FollowUserMutation(success=True, follow=follow_obj)
 
 
 class UnfollowUserMutation(graphene.Mutation):
     success = graphene.Boolean()
 
     class Arguments:
-        user_id = graphene.Int(required=True)
+        user_id = graphene.ID(required=True)
 
     def mutate(self, info, user_id):
         follower = info.context.user
         if follower.is_anonymous:
             raise Exception("Authentication required")
 
-        followed = get_object_or_404(User, pk=user_id)
-        Follow.objects.filter(follower=follower, followed=followed).delete()
+        followed = get_object_or_404(User, pk=int(user_id))
+
+        # Use the service function
+        success = unfollow_user(follower, followed)
+        
+        if not success:
+            raise Exception("You are not following this user")
+
         return UnfollowUserMutation(success=True)
 
-
-# Local import to reference the GraphQL type for Follow
-from .schema import FollowType

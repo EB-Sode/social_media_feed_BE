@@ -18,8 +18,8 @@ def notify_like(sender, instance, created, **kwargs):
         if liker != recipient:
             Notification.objects.create(
                 recipient=recipient,
-                actor=liker,
-                verb="liked",
+                sender=liker,
+                notification_type="liked",
                 target_object=post
             )
 
@@ -33,8 +33,8 @@ def notify_comment(sender, instance, created, **kwargs):
         if commenter != recipient:
             Notification.objects.create(
                 recipient=recipient,
-                actor=commenter,
-                verb="commented",
+                sender=commenter,
+                notification_type="commented",
                 target_object=post
             )
 
@@ -47,6 +47,6 @@ def notify_follow(sender, instance, created, **kwargs):
         if follower != followed:
             Notification.objects.create(
                 recipient=followed,
-                actor=follower,
-                verb="followed",
+                sender=follower,
+                notification_type="followed",
             )

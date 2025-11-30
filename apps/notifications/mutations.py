@@ -1,4 +1,3 @@
-# apps/notifications/mutations.py
 """
 Mark notifications as read/unread.
 Notifications are created by your business logic (e.g., in post/follow handlers).
@@ -29,6 +28,22 @@ class MarkNotificationAsReadMutation(graphene.Mutation):
         notification.save()
         return MarkNotificationAsReadMutation(success=True, notification=notification)
 
+
+class MarkAllNotificationsAsReadMutation(graphene.Mutation):
+    success = graphene.Boolean()
+    count = graphene.Int()  # Number of notifications marked as read
+    notifications = graphene.List(lambda: NotificationType)  # All notifications
+
+    def mutate(self, info):
+        # Mark all notifications as read
+        notifications = Notification.objects.all()
+        updated_count = notifications.update(is_read=True)
+        
+        return MarkAllNotificationsAsReadMutation(
+            success=True,
+            count=updated_count,
+            notifications=notifications
+        )
 
 # Local import
 from .schema import NotificationType

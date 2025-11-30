@@ -1,4 +1,3 @@
-# apps/posts/mutations.py
 """
 Mutations for posts: create, update, delete; like/unlike; commenting.
 Each mutation returns the changed object for convenience.
@@ -9,8 +8,9 @@ from graphene_file_upload.scalars import Upload
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.db import IntegrityError
-
+from .services import create_comment
 from .models import Post, Comment, Like
+from .types import PostType, CommentType
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -20,7 +20,7 @@ class CreatePostMutation(graphene.Mutation):
     """
     Create a post. Accepts content and optional image upload.
     """
-    post = graphene.Field(lambda: graphene.NonNull(lambda: PostType))
+    post = graphene.Field(PostType)
 
     class Arguments:
         content = graphene.String(required=True)
@@ -42,10 +42,10 @@ class UpdatePostMutation(graphene.Mutation):
     """
     Update a post owned by the current user.
     """
-    post = graphene.Field(lambda: graphene.NonNull(lambda: PostType))
+    post = graphene.Field(PostType)
 
     class Arguments:
-        post_id = graphene.Int(required=True)
+        post_id = graphene.ID(required=True) 
         content = graphene.String(required=False)
         image = Upload(required=False)
 
@@ -54,7 +54,7 @@ class UpdatePostMutation(graphene.Mutation):
         if user.is_anonymous:
             raise Exception("Authentication required")
 
-        post = get_object_or_404(Post, pk=post_id)
+        post = get_object_or_404(Post, pk=int(post_id))
         if post.author != user:
             raise Exception("You don't have permission to edit this post")
 
@@ -73,14 +73,14 @@ class DeletePostMutation(graphene.Mutation):
     success = graphene.Boolean()
 
     class Arguments:
-        post_id = graphene.Int(required=True)
+        post_id = graphene.ID(required=True) 
 
     def mutate(self, info, post_id):
         user = info.context.user
         if user.is_anonymous:
             raise Exception("Authentication required")
 
-        post = get_object_or_404(Post, pk=post_id)
+        post = get_object_or_404(Post, pk=int(post_id))
         if post.author != user:
             raise Exception("You don't have permission to delete this post")
 
@@ -91,40 +91,56 @@ class DeletePostMutation(graphene.Mutation):
 class LikePostMutation(graphene.Mutation):
     """
     Toggles a like for the current user on a post.
-    Returns the post (so client can refresh like count).
+    Returns the post and success status.
     """
-    post = graphene.Field(lambda: graphene.NonNull(lambda: PostType))
+    success = graphene.Boolean() 
+    post = graphene.Field(PostType)
+    message = graphene.String()
 
     class Arguments:
-        post_id = graphene.Int(required=True)
+        post_id = graphene.ID(required=True)
 
     def mutate(self, info, post_id):
         user = info.context.user
         if user.is_anonymous:
             raise Exception("Authentication required")
 
-        post = get_object_or_404(Post, pk=post_id)
-        # Try to create like; if exists, remove it (toggle)
-        try:
-            like, created = Like.objects.get_or_create(user=user, post=post)
-            if not created:
-                # Already liked -> unlike
-                like.delete()
-        except IntegrityError:
-            # Unique constraint race guard
-            Like.objects.filter(user=user, post=post).delete()
+        post = get_object_or_404(Post, pk=int(post_id))
+        
+        # Toggle like
+        like, created = Like.objects.get_or_create(user=user, post=post)
+        
+        if not created:
+            # Already liked -> unlike
+            like.delete()
+            message = "Post unliked"
+        else:
+            message = "Post liked"
+            
+            # Create notification for post author
+            if post.author != user:
+                from apps.notifications.models import Notification
+                Notification.objects.create(
+                    recipient=post.author,
+                    sender=user,
+                    notification_type='like',
+                    post=post,
+                    message=f"{user.username} liked your post"
+                )
 
-        return LikePostMutation(post=post)
+        return LikePostMutation(
+            success=True,
+            post=post,
+            message=message
+        )
 
 
 class CreateCommentMutation(graphene.Mutation):
-    """
-    Add a comment to a post.
-    """
-    comment = graphene.Field(lambda: graphene.NonNull(lambda: CommentType))
+    comment = graphene.Field(CommentType)
+    success = graphene.Boolean()
 
     class Arguments:
-        post_id = graphene.Int(required=True)
+        post_id = graphene.ID(required=True)
         content = graphene.String(required=True)
 
     def mutate(self, info, post_id, content):
@@ -132,10 +148,56 @@ class CreateCommentMutation(graphene.Mutation):
         if user.is_anonymous:
             raise Exception("Authentication required")
 
-        post = get_object_or_404(Post, pk=post_id)
-        comment = Comment.objects.create(post=post, author=user, content=content)
-        return CreateCommentMutation(comment=comment)
+        post = get_object_or_404(Post, pk=int(post_id))
+        
+        # ✅ Use service function
+        comment = create_comment(post, user, content)
+        
+        return CreateCommentMutation(comment=comment, success=True)
 
 
-# Local imports to avoid circular import issues in the same file
-from .schema import PostType, CommentType
+class UpdateCommentMutation(graphene.Mutation):
+    """
+    Update a comment owned by the current user.
+    """
+    comment = graphene.Field(CommentType)
+    success = graphene.Boolean()
+
+    class Arguments:
+        comment_id = graphene.ID(required=True)
+        content = graphene.String(required=True)
+
+    def mutate(self, info, comment_id, content):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception("Authentication required")
+
+        comment = get_object_or_404(Comment, pk=int(comment_id))
+        if comment.author != user:
+            raise Exception("You don't have permission to edit this comment")
+
+        comment.content = content
+        comment.save()
+        return UpdateCommentMutation(comment=comment, success=True)
+
+
+class DeleteCommentMutation(graphene.Mutation):
+    """
+    Delete a comment owned by the current user.
+    """
+    success = graphene.Boolean()
+
+    class Arguments:
+        comment_id = graphene.ID(required=True)
+
+    def mutate(self, info, comment_id):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception("Authentication required")
+
+        comment = get_object_or_404(Comment, pk=int(comment_id))
+        if comment.author != user:
+            raise Exception("You don't have permission to delete this comment")
+
+        comment.delete()
+        return DeleteCommentMutation(success=True)

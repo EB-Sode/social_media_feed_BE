@@ -50,6 +50,10 @@ class Comment(models.Model):
     def __str__(self):
         return f"Comment by {self.author.username}"
     
+    @property
+    def user(self):
+        return self.author
+    
 class Like(models.Model):
     """
     A user liking a post.

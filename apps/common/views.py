@@ -14,10 +14,10 @@ class AuthenticatedGraphQLView(GraphQLView):
     @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
 
-        logger.info("=" * 50)
-        logger.info("🔍 DEBUGGING AUTHENTICATION")
-        logger.info(f"Request headers: {dict(request.headers)}")
-        logger.info(f"Request META AUTH: {request.META.get('HTTP_AUTHORIZATION', 'NOT FOUND')}")
+        # logger.info("=" * 50)
+        # logger.info("🔍 DEBUGGING AUTHENTICATION")
+        # logger.info(f"Request headers: {dict(request.headers)}")
+        # logger.info(f"Request META AUTH: {request.META.get('HTTP_AUTHORIZATION', 'NOT FOUND')}")
         
         jwt_auth = JWTAuthentication()
 

@@ -117,7 +117,7 @@ social_media_backend/
 │   │   ├── serializers.py        # If you ever need DRF compatibility
 │   │   ├── mutations.py          # Separate user mutations if preferred
 │   │   ├── signals.py            # Profile creation, etc.
-│   │   ├── tests.py
+│   │   ├── types.py
 │   │   └── admin.py
 │   │
 │   ├── posts/                    # Manages posts, comments, and likes
@@ -126,7 +126,7 @@ social_media_backend/
 │   │   ├── schema.py             # Post queries & mutations
 │   │   ├── mutations.py
 │   │   ├── services.py           # Helper functions (e.g., fetch_feed())
-│   │   ├── tests.py
+│   │   ├── types.py
 │   │   └── admin.py
 │   │
 │   ├── follows/                  # Manages following relationships
@@ -134,8 +134,9 @@ social_media_backend/
 │   │   ├── models.py             # Follow model (follower -> followed)
 │   │   ├── schema.py             # Follow mutations (follow/unfollow)
 │   │   ├── services.py
-│   │   ├── tests.py
+│   │   ├── types.py
 │   │   └── admin.py
+        
 │   │
 │   └── notifications/ (optional) # If you later add async updates
 │       ├── models.py

@@ -1,5 +1,3 @@
-# apps/notifications/services.py
-
 """
 Services for creating social notifications.
 This can later be replaced with Celery tasks for async processing.
@@ -22,8 +20,8 @@ def create_notification(recipient, actor, verb, target=None):
 
     Notification.objects.create(
         recipient=recipient,
-        actor=actor,
-        verb=verb,
+        sender=actor,
+        notification_type=verb,
         target_object=target
     )
 

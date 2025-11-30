@@ -48,6 +48,8 @@ class NotificationQuery(graphene.ObjectType):
 
 
 class NotificationMutation(graphene.ObjectType):
-    from .mutations import MarkNotificationAsReadMutation
+    from .mutations import MarkNotificationAsReadMutation, MarkAllNotificationsAsReadMutation
     
-    mark_as_read = MarkNotificationAsReadMutation.Field()
+    markAsRead = MarkNotificationAsReadMutation.Field()
+    markAllAsRead = MarkAllNotificationsAsReadMutation.Field()
+
