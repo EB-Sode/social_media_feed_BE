@@ -1,35 +1,25 @@
-# --------- BASE IMAGE ---------
+# Use slim image
 FROM python:3.12-slim as base
 
-# Install system dependencies
+# System deps
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libpq-dev \
+    build-essential libpq-dev curl git nginx \
     && rm -rf /var/lib/apt/lists/*
 
-# Set workdir
 WORKDIR /app
 
-# Copy requirements first for caching
+# Copy and install Python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# --------- FINAL IMAGE ---------
-FROM python:3.12-slim
-
-WORKDIR /app
-
-# Copy installed packages from base
-COPY --from=base /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+# Copy project
 COPY . .
 
-# Make entrypoint executable
+# Expose port
+EXPOSE 8000
+
+# Permissions
 RUN chmod +x docker/entrypoint.sh
 
-# Environment variables for production/development
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Entry point script
+# Entrypoint runs migrations, collectstatic, then starts Gunicorn + Nginx
 ENTRYPOINT ["sh", "docker/entrypoint.sh"]

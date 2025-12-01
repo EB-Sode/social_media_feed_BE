@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+env/
+venv/
+.venv/
+.env/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Database
+*.sqlite3
+
+# Logs
+*.log
+
+# Test / coverage
+htmlcov/
+pytest_cache/
+.coverage
+
+# Misc
+*.bak
+*.tmp
+
+erd/
+
+social_media_feed/settings_test.py

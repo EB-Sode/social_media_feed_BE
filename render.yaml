@@ -1,0 +1,61 @@
+services:
+  ######################################################################
+  # 1. WEB SERVICE
+  ######################################################################
+  - type: web
+    name: socialmedia-web
+    env: docker
+    plan: free
+    dockerfilePath: docker/Dockerfile
+    dockerContext: .
+    autoDeploy: true
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        sync: false        # from ElephantSQL or Supabase
+      - key: REDIS_URL
+        sync: false        # from Upstash or RedisCloud
+      - key: CELERY_BROKER_URL
+        fromEnv: REDIS_URL
+      - key: CELERY_RESULT_BACKEND
+        fromEnv: REDIS_URL
+      - key: WEB_CONCURRENCY
+        value: "4"
+      - key: ALLOWED_HOSTS
+        value: "*"
+
+  ######################################################################
+  # 2. CELERY WORKER + CELERY BEAT (COMBINED)
+  ######################################################################
+  - type: worker
+    name: socialmedia-celery
+    env: docker
+    plan: free
+    dockerfilePath: docker/Dockerfile
+    dockerContext: .
+    autoDeploy: true
+    command: >
+      bash -c "
+      mkdir -p /celerybeat &&
+      celery -A celery_app worker --loglevel=INFO &
+      celery -A celery_app beat --loglevel=INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+      "
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        sync: false
+      - key: DJANGO_DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        sync: false        # external Postgres
+      - key: REDIS_URL
+        sync: false        # external Redis
+      - key: CELERY_BROKER_URL
+        fromEnv: REDIS_URL
+      - key: CELERY_RESULT_BACKEND
+        fromEnv: REDIS_URL
+      - key: ALLOWED_HOSTS
+        value: "*"
+
