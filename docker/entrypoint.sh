@@ -31,17 +31,17 @@ nginx -g "daemon off;" &
 # -------------------------
 # 5️⃣ Start Celery Worker + Beat
 # -------------------------
-echo "☕ Starting Celery worker + beat..."
-mkdir -p /celerybeat
+# echo "☕ Starting Celery worker + beat..."
+# mkdir -p /celerybeat
 
-# Start Celery Worker in background
-celery -A celery_app worker --loglevel=INFO &
+# # Start Celery Worker in background
+# celery -A celery_app worker --loglevel=INFO &
 
-# Start Celery Beat in foreground (so container stays alive)
-celery -A celery_app beat \
-    --loglevel=INFO \
-    --scheduler django_celery_beat.schedulers:DatabaseScheduler \
-    --pidfile=/celerybeat/celerybeat.pid
+# # Start Celery Beat in foreground (so container stays alive)
+# celery -A celery_app beat \
+#     --loglevel=INFO \
+#     --scheduler django_celery_beat.schedulers:DatabaseScheduler \
+#     --pidfile=/celerybeat/celerybeat.pid
 
 
 
