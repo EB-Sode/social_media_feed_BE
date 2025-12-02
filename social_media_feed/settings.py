@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     "apps.notifications",
 ]
 
-AUTH_USER_MODEL = "users.CustomUser" #Override django user with custom user
+AUTH_USER_MODEL = "users.CustomUser"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
