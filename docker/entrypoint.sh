@@ -1,15 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
-# 1) Apply DB migrations
+# Apply DB migrations
 echo "🔄 Applying migrations..."
 python manage.py migrate --noinput
 
-# 2) Collect static files
+# Collect static files
 echo "📦 Collecting static files..."
 python manage.py collectstatic --noinput
 
-# 3) Start supervisord (manages gunicorn + nginx)
+# Ensure Gunicorn socket permissions
+touch /tmp/gunicorn.sock
+chmod 777 /tmp/gunicorn.sock
+
+# Start supervisord
 echo "🚀 Starting supervisord..."
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
 

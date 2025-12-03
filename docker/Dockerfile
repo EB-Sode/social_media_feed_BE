@@ -1,4 +1,3 @@
-# Dockerfile - production for Render
 FROM python:3.11-slim
 
 # Install system deps
@@ -11,17 +10,18 @@ RUN apt-get update \
       curl \
  && rm -rf /var/lib/apt/lists/*
 
+# Set workdir
 WORKDIR /app
 
-# Install Python deps
+# Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip \
  && pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Copy project code
 COPY . .
 
-# Collect static files at build time (optional: you may prefer at container start)
+# Collect static files at build time
 RUN python manage.py collectstatic --noinput || true
 
 # Remove default nginx config and copy ours
@@ -34,9 +34,8 @@ COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Ensure entrypoint is executable
 RUN chmod +x docker/entrypoint.sh
 
-# Expose (Render sets PORT automatically)
+# Expose port (Render sets $PORT automatically)
 EXPOSE 10000
 
-# Use entrypoint (runs migrations/collectstatic then supervisord)
+# Entrypoint
 ENTRYPOINT ["sh", "docker/entrypoint.sh"]
-
