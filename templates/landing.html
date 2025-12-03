@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Social Media Feed API</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f7f9fb;
+            color: #333;
+        }
+        h1 {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+        p, a {
+            font-size: 18px;
+        }
+        a {
+            color: #0073e6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            text-align: center;
+        }
+        .card {
+            background: white;
+            padding: 20px 30px;
+            margin-top: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+        .endpoint {
+            margin: 12px 0;
+        }
+        .endpoint b {
+            font-size: 20px;
+        }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+    
+    <h1>🚀 Social Media Feed API</h1>
+    <p>Your backend powering posts, likes, follows, notifications, and a personalized feed.</p>
+
+    <div class="card">
+        <h2>🔗 Available Endpoints</h2>
+
+        <div class="endpoint">
+            <b>GraphQL Playground (GraphiQL)</b><br>
+            <a href="https://social-media-feed-be.onrender.com/graphql/" target="_blank">graphql</a>
+        </div>
+
+        <div class="endpoint">
+            <b>Health Check</b><br>
+            <a href="https://social-media-feed-be.onrender.com/health/" target="_blank">health</a>
+        </div>
+
+        <div class="endpoint">
+            <b>Admin Panel</b><br>
+            <a href="https://social-media-feed-be.onrender.com/admin/" target="_blank">admin</a>
+        </div>
+
+        <!-- Optional: If you later add subscriptions -->
+        <!--
+        <div class="endpoint">
+            <b>GraphQL Subscriptions (WebSockets)</b><br>
+            <a href="/ws/graphql/">/ws/graphql/</a>
+        </div>
+        -->
+    </div>
+
+    <p style="margin-top: 40px;">📚 Full documentation coming soon.</p>
+
+</div>
+
+</body>
+</html>

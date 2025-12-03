@@ -20,19 +20,16 @@ from django.http import JsonResponse
 from django.urls import path
 from apps.common.views import AuthenticatedGraphQLView
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import render
 
 def health(request):
     return JsonResponse({"status": "ok"})
 
-def index(request):
-    return JsonResponse({
-        "status": "ok",
-        "message": "Social Media Feed API is running, go to https://social-media-feed-be.onrender.com/graphql/ to access the GraphQL endpoint."
-    })
-
+def landing_page(request):
+    return render(request, "landing.html")
 
 urlpatterns = [
-    path("", index),
+    path("", landing_page),
     path("admin/", admin.site.urls),
     path('graphql/', csrf_exempt(AuthenticatedGraphQLView.as_view(graphiql=True))),
     path("health/", health),
