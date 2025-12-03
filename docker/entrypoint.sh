@@ -26,7 +26,7 @@ gunicorn social_media_feed.wsgi:application \
 # 4️⃣ Start Nginx (serve static + media)
 # -------------------------
 echo "🌐 Starting Nginx..."
-nginx -g "daemon off;" &
+nginx -g "daemon off;"
 
 # -------------------------
 # 5️⃣ Start Celery Worker + Beat
