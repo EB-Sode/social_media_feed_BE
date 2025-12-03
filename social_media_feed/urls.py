@@ -24,7 +24,15 @@ from django.views.decorators.csrf import csrf_exempt
 def health(request):
     return JsonResponse({"status": "ok"})
 
+def index(request):
+    return JsonResponse({
+        "status": "ok",
+        "message": "Social Media Feed API is running"
+    })
+
+
 urlpatterns = [
+    path("", index),
     path("admin/", admin.site.urls),
     path('graphql/', csrf_exempt(AuthenticatedGraphQLView.as_view(graphiql=True))),
     path("health/", health),
