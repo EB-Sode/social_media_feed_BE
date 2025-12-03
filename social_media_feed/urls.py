@@ -27,7 +27,7 @@ def health(request):
 def index(request):
     return JsonResponse({
         "status": "ok",
-        "message": "Social Media Feed API is running"
+        "message": "Social Media Feed API is running, go to https://social-media-feed-be.onrender.com/graphql/ to access the GraphQL endpoint."
     })
 
 
