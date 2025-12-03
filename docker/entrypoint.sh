@@ -13,6 +13,10 @@ python manage.py migrate --noinput
 echo "📦 Collecting static files..."
 python manage.py collectstatic --noinput
 
+# Start supervisor
+echo "🚀 Starting supervisord..."
+exec supervisord -c docker/supervisord.conf
+
 # -------------------------
 # 4️⃣ Start Nginx (serve static + media)
 # -------------------------
@@ -29,9 +33,6 @@ python manage.py collectstatic --noinput
 #     --timeout 120
 
 
-# Start supervisor
-echo "🚀 Starting supervisord..."
-exec supervisord -c docker/supervisord.conf
 
 
 
