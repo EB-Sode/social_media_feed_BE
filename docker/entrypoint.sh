@@ -1,21 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
-# -------------------------
-# 1️⃣ Apply Django migrations
-# -------------------------
+# 1) Apply DB migrations
 echo "🔄 Applying migrations..."
 python manage.py migrate --noinput
 
-# -------------------------
-# 2️⃣ Collect static files
-# -------------------------
+# 2) Collect static files
 echo "📦 Collecting static files..."
 python manage.py collectstatic --noinput
 
-# Start supervisor
+# 3) Start supervisord (manages gunicorn + nginx)
 echo "🚀 Starting supervisord..."
-exec supervisord -c docker/supervisord.conf
+exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
+
+
 
 # -------------------------
 # 4️⃣ Start Nginx (serve static + media)

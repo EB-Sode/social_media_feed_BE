@@ -16,11 +16,16 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.http import JsonResponse
 from django.urls import path
 from apps.common.views import AuthenticatedGraphQLView
 from django.views.decorators.csrf import csrf_exempt
 
+def health(request):
+    return JsonResponse({"status": "ok"})
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('graphql/', csrf_exempt(AuthenticatedGraphQLView.as_view(graphiql=True))),
+    path("health/", health),
 ]
