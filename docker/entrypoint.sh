@@ -13,30 +13,24 @@ python manage.py collectstatic --noinput
 touch /tmp/gunicorn.sock
 chmod 777 /tmp/gunicorn.sock
 
-# Start supervisord
-echo "🚀 Starting supervisord..."
-exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
-
-
-
 # -------------------------
 # 4️⃣ Start Nginx (serve static + media)
 # -------------------------
 # echo "🌐 Starting Nginx..."
 # nginx -g "daemon off;" &
 
-# # -------------------------
-# # 3️⃣ Start Gunicorn (Django web server)
-# # -------------------------
-# echo "🚀 Starting Gunicorn..."
-# gunicorn social_media_feed.wsgi:application \
-#     --bind unix:/tmp/gunicorn.sock \
-#     --workers 4 \
-#     --timeout 120
+# -------------------------
+# 3️⃣ Start Gunicorn (Django web server)
+# -------------------------
+echo "🚀 Starting Gunicorn..."
+gunicorn social_media_feed.wsgi:application \
+    --bind 0.0.0.0:${PORT} \
+    --workers 4 \
+    --timeout 120
 
-
-
-
+# # Start supervisord
+# echo "🚀 Starting supervisord..."
+# exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
 
 
 # -------------------------

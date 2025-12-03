@@ -37,5 +37,9 @@ RUN chmod +x docker/entrypoint.sh
 # Expose port (Render sets $PORT automatically)
 EXPOSE 10000
 
-# Entrypoint
-ENTRYPOINT ["sh", "docker/entrypoint.sh"]
+# Copy entrypoint script
+COPY docker/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Set as entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
