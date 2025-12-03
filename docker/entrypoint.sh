@@ -16,17 +16,24 @@ python manage.py collectstatic --noinput
 # -------------------------
 # 4️⃣ Start Nginx (serve static + media)
 # -------------------------
-echo "🌐 Starting Nginx..."
-nginx -g "daemon off;" &
+# echo "🌐 Starting Nginx..."
+# nginx -g "daemon off;" &
 
-# -------------------------
-# 3️⃣ Start Gunicorn (Django web server)
-# -------------------------
-echo "🚀 Starting Gunicorn..."
-gunicorn social_media_feed.wsgi:application \
-    --bind unix:/tmp/gunicorn.sock \
-    --workers 4 \
-    --timeout 120
+# # -------------------------
+# # 3️⃣ Start Gunicorn (Django web server)
+# # -------------------------
+# echo "🚀 Starting Gunicorn..."
+# gunicorn social_media_feed.wsgi:application \
+#     --bind unix:/tmp/gunicorn.sock \
+#     --workers 4 \
+#     --timeout 120
+
+
+# Start supervisor
+echo "🚀 Starting supervisord..."
+exec supervisord -c docker/supervisord.conf
+
+
 
 
 # -------------------------
@@ -43,6 +50,8 @@ gunicorn social_media_feed.wsgi:application \
 #     --loglevel=INFO \
 #     --scheduler django_celery_beat.schedulers:DatabaseScheduler \
 #     --pidfile=/celerybeat/celerybeat.pid
+
+
 
 
 

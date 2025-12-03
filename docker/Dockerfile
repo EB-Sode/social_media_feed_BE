@@ -6,6 +6,10 @@ RUN apt-get update && apt-get install -y \
     build-essential libpq-dev curl git nginx \
     && rm -rf /var/lib/apt/lists/*
 
+# Install supervisor
+RUN apt-get update && apt-get install -y supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy and install Python dependencies
