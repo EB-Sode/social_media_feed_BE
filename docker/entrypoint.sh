@@ -14,19 +14,20 @@ echo "📦 Collecting static files..."
 python manage.py collectstatic --noinput
 
 # -------------------------
+# 4️⃣ Start Nginx (serve static + media)
+# -------------------------
+echo "🌐 Starting Nginx..."
+nginx -g "daemon off;" &
+
+# -------------------------
 # 3️⃣ Start Gunicorn (Django web server)
 # -------------------------
 echo "🚀 Starting Gunicorn..."
 gunicorn social_media_feed.wsgi:application \
     --bind unix:/tmp/gunicorn.sock \
     --workers 4 \
-    --timeout 120 &
+    --timeout 120
 
-# -------------------------
-# 4️⃣ Start Nginx (serve static + media)
-# -------------------------
-echo "🌐 Starting Nginx..."
-nginx -g "daemon off;"
 
 # -------------------------
 # 5️⃣ Start Celery Worker + Beat
