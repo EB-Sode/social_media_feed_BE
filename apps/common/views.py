@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class AuthenticatedGraphQLView(GraphQLView):
-    @method_decorator(csrf_exempt)
+    # @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
 
         # logger.info("=" * 50)
