@@ -15,7 +15,7 @@ class PostType(DjangoObjectType):
     
     class Meta:
         model = Post
-        fields = ("id", "author", "content", "image", "created_at")
+        fields = ("id", "author", "content", "image", "created_at", "updated_at")
 
     def resolve_likes_count(self, info):
         """Count of likes on this post."""
@@ -38,7 +38,7 @@ class CommentType(DjangoObjectType):
     
     class Meta:
         model = Comment
-        fields = ("id", "post", "author", "content", "created_at")
+        fields = ("id", "post", "author", "content", "created_at", "updated_at")
 
 
 class LikeType(DjangoObjectType):

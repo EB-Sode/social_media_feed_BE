@@ -14,6 +14,8 @@ class Post(models.Model):
     content = models.TextField()
     image = models.ImageField(upload_to="posts/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
 
     def likes_count(self):
@@ -43,6 +45,7 @@ class Comment(models.Model):
     )
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["created_at"]
