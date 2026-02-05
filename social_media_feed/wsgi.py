@@ -14,3 +14,7 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'social_media_feed.settings')
 
 application = get_wsgi_application()
+
+# ✅ Run migrations on startup (Render Free fix)
+from .startup import run_migrations
+run_migrations()
