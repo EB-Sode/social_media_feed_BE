@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from .types import UserType
+from graphql import GraphQLError
 
 User = get_user_model()
 
@@ -146,3 +147,22 @@ class LogoutMutation(graphene.Mutation):
             return LogoutMutation(success=True)
         except TokenError:
             raise Exception("Invalid or expired refresh token")
+        
+class DeleteAllUsersMutation(graphene.Mutation):
+    success = graphene.Boolean()
+    deleted_count = graphene.Int()
+
+    @classmethod
+    def mutate(cls, root, info):
+        user = info.context.user
+
+        # 🔒 Security check
+        if user.is_anonymous or not user.is_superuser:
+            raise GraphQLError("Not authorized")
+
+        deleted_count, _ = User.objects.all().delete()
+
+        return DeleteAllUsersMutation(
+            success=True,
+            deleted_count=deleted_count
+        )

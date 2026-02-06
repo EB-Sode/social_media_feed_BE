@@ -10,6 +10,8 @@ import graphene
 from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+
+from apps.users.mutations import DeleteAllUsersMutation
 from .types import UserType
 
 
@@ -27,6 +29,7 @@ class UserQuery(graphene.ObjectType):
     user = graphene.Field(UserType, user_id=graphene.ID(required=True)) 
     search_users = graphene.List(UserType, query=graphene.String(required=True))
     me = graphene.Field(UserType)
+    delete_all_users = DeleteAllUsersMutation.Field()
 
     def resolve_users(self, info, **kwargs):
         # Return all users
@@ -50,7 +53,7 @@ class UserQuery(graphene.ObjectType):
 
 
 class UserMutation(graphene.ObjectType):
-    from .mutations import SignUpMutation, LoginMutation, UpdateProfileMutation, RefreshTokenMutation
+    from .mutations import SignUpMutation, LoginMutation, UpdateProfileMutation, RefreshTokenMutation, DeleteAllUsersMutation
     signup = SignUpMutation.Field()
     login = LoginMutation.Field()
     update_profile = UpdateProfileMutation.Field()
