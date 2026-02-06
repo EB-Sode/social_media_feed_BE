@@ -29,18 +29,17 @@ class UserQuery(graphene.ObjectType):
     user = graphene.Field(UserType, user_id=graphene.ID(required=True)) 
     search_users = graphene.List(UserType, query=graphene.String(required=True))
     me = graphene.Field(UserType)
-    delete_all_users = DeleteAllUsersMutation.Field()
 
     def resolve_users(self, info, **kwargs):
         # Return all users
         return User.objects.all()
     
-    def resolve_user(self, info, id, **kwargs):  # ✅ ADD THIS
+    def resolve_user(self, info, user_id, **kwargs):
         try:
-            return User.objects.get(pk=id)
+            return User.objects.get(pk=int(user_id))
         except User.DoesNotExist:
             return None
-
+        
     def resolve_search_users(self, info, query, **kwargs):
         # Search by username or bio
         return User.objects.filter(
@@ -58,6 +57,7 @@ class UserMutation(graphene.ObjectType):
     login = LoginMutation.Field()
     update_profile = UpdateProfileMutation.Field()
     refresh_token = RefreshTokenMutation.Field()
+    delete_all_users = DeleteAllUsersMutation.Field()
 
 
 
