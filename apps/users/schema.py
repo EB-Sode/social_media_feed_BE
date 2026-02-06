@@ -24,12 +24,19 @@ class UserType(DjangoObjectType):
 
 class UserQuery(graphene.ObjectType):
     users = graphene.List(UserType) 
+    user = graphene.Field(UserType, user_id=graphene.ID(required=True)) 
     search_users = graphene.List(UserType, query=graphene.String(required=True))
     me = graphene.Field(UserType)
 
     def resolve_users(self, info, **kwargs):
         # Return all users
         return User.objects.all()
+    
+    def resolve_user(self, info, id, **kwargs):  # ✅ ADD THIS
+        try:
+            return User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return None
 
     def resolve_search_users(self, info, query, **kwargs):
         # Search by username or bio
