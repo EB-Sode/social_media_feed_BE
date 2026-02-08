@@ -21,7 +21,7 @@ User = get_user_model()
 class UserType(DjangoObjectType):
     class Meta:
         model = User
-        fields = ("id", "username", "email", "bio", "profile_image", "created_at")
+        fields = ("id", "username", "email", "bio", "profile_image", "created_at", "location", "birth_date", "cover_image")
 
 
 class UserQuery(graphene.ObjectType):
