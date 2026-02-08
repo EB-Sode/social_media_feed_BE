@@ -19,8 +19,9 @@ def notify_like(sender, instance, created, **kwargs):
             Notification.objects.create(
                 recipient=recipient,
                 sender=liker,
-                notification_type="liked",
-                target_object=post
+                notification_type="like",
+                post=post,
+                message="liked your post",
             )
 
 
@@ -34,8 +35,9 @@ def notify_comment(sender, instance, created, **kwargs):
             Notification.objects.create(
                 recipient=recipient,
                 sender=commenter,
-                notification_type="commented",
-                target_object=post
+                notification_type="comment",
+                post=post,
+                message="commented on your post",
             )
 
 
@@ -48,5 +50,6 @@ def notify_follow(sender, instance, created, **kwargs):
             Notification.objects.create(
                 recipient=followed,
                 sender=follower,
-                notification_type="followed",
+                notification_type="follow",
+                message="started following you",
             )
