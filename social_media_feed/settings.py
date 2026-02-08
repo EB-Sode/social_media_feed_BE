@@ -104,6 +104,23 @@ GRAPHENE = {
         "graphql_jwt.middleware.JSONWebTokenMiddleware",
     ],
 }
+
+GRAPHQL_JWT = {
+    "JWT_VERIFY_EXPIRATION": True,
+
+    # ✅ make access token long-lived (match your intention)
+    "JWT_EXPIRATION_DELTA": timedelta(days=3),
+
+    # ✅ refresh token lifetime
+    "JWT_REFRESH_EXPIRATION_DELTA": timedelta(days=7),
+
+    # ✅ allow long-running refresh tokens
+    "JWT_LONG_RUNNING_REFRESH_TOKEN": True,
+
+    # optional but good
+    "JWT_ALLOW_ANY_HANDLER": "graphql_jwt.utils.allow_any",
+}
+
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
 ]
