@@ -10,4 +10,17 @@ class UserType(DjangoObjectType):
         model = User
         fields = ("id", "username", "email", "bio", "profile_image", "created_at", "location", "birth_date", "cover_image")
 
+    followers_count = graphene.Int()
+    following_count = graphene.Int()
+    posts_count = graphene.Int()
+    
+    def resolve_followers_count(self, info):
+        return self.followers_count()
+    
+    def resolve_following_count(self, info):
+        return self.following_count()
+    
+    def resolve_posts_count(self, info):
+        return self.posts.count()
+
         
