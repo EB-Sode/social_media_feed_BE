@@ -5,6 +5,10 @@ set -euo pipefail
 echo "🔄 Applying migrations..."
 python manage.py migrate --noinput
 
+# ✅ Fix invalid notification_type values (idempotent + safe)
+echo "🧹 Fixing notification types..."
+python manage.py fix_notification_types || true
+
 # Collect static files
 echo "📦 Collecting static files..."
 python manage.py collectstatic --noinput
@@ -27,6 +31,7 @@ gunicorn social_media_feed.wsgi:application \
     --bind 0.0.0.0:${PORT} \
     --workers 4 \
     --timeout 120
+
 
 # # Start supervisord
 # echo "🚀 Starting supervisord..."
