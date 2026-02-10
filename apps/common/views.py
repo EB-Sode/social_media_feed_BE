@@ -1,5 +1,6 @@
 # views.py
 from graphene_django.views import GraphQLView
+from graphene_file_upload.django import FileUploadGraphQLView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from django.contrib.auth.models import AnonymousUser
@@ -10,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class AuthenticatedGraphQLView(GraphQLView):
+class AuthenticatedGraphQLView(FileUploadGraphQLView):
     # @method_decorator(csrf_exempt)
     def dispatch(self, request, *args, **kwargs):
 

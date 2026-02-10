@@ -22,6 +22,7 @@ from apps.common.views import AuthenticatedGraphQLView
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 
+
 def health(request):
     return JsonResponse({"status": "ok"})
 
