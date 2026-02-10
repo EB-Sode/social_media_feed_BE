@@ -12,6 +12,7 @@ class PostType(DjangoObjectType):
     likes_count = graphene.Int()
     comments_count = graphene.Int()
     is_liked_by_user = graphene.Boolean()
+    image = graphene.String()
     
     class Meta:
         model = Post
@@ -20,6 +21,12 @@ class PostType(DjangoObjectType):
     def resolve_likes_count(self, info):
         """Count of likes on this post."""
         return self.likes.count()
+    
+    def resolve_image(self, info):
+        if not self.image:
+            return None
+        request = info.context
+        return request.build_absolute_uri(self.image.url)
 
     def resolve_comments_count(self, info):
         """Count of comments on this post."""

@@ -22,6 +22,8 @@ from apps.common.views import AuthenticatedGraphQLView
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 
+from social_media_feed import settings
+
 
 def health(request):
     return JsonResponse({"status": "ok"})
@@ -35,3 +37,6 @@ urlpatterns = [
     path('graphql/', csrf_exempt(AuthenticatedGraphQLView.as_view(graphiql=True))),
     path("health/", health),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
