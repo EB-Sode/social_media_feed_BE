@@ -37,6 +37,3 @@ urlpatterns = [
     path('graphql/', csrf_exempt(AuthenticatedGraphQLView.as_view(graphiql=True))),
     path("health/", health),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
