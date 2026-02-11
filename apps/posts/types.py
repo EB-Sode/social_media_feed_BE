@@ -26,7 +26,7 @@ class PostType(DjangoObjectType):
         if not self.image:
             return None
         request = info.context
-        return request.build_absolute_uri(self.image.url)
+        return self.image.url
 
     def resolve_comments_count(self, info):
         """Count of comments on this post."""

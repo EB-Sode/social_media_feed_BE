@@ -25,9 +25,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-smowazhje1k02k#eyy_wqt^4^%1m@&m52jlzo#g7jlcar^f3h8'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
 # ALLOWED_HOSTS = ['*']
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost").split(",")
 
@@ -46,8 +43,11 @@ INSTALLED_APPS = [
     "rest_framework",     
     "rest_framework_simplejwt",  
 
+    "cloudinary",
+    "cloudinary_storage",
     'corsheaders', 
     'graphene_django',
+
     "apps.users",
     "apps.posts",
     "apps.follows",
@@ -146,6 +146,14 @@ ROOT_URLCONF = 'social_media_feed.urls'
 
 
 DEBUG = int(os.environ.get("DEBUG", 1))  # 1 = True, 0 = False
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    "API_KEY": os.environ.get("CLOUDINARY_API_KEY"),
+    "API_SECRET": os.environ.get("CLOUDINARY_API_SECRET"),
+}
+
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 if DEBUG:
     # DEVELOPMENT
