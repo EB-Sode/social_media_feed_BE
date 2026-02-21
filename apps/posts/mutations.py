@@ -69,6 +69,30 @@ class UpdatePostMutation(graphene.Mutation):
         return UpdatePostMutation(post=post)
 
 
+class DeleteAllUserPosts(graphene.Mutation):
+    success = graphene.Boolean()
+    deleted_count = graphene.Int()
+
+    class Arguments:
+        user_id = graphene.ID(required=True)
+
+    def mutate(self, info, user_id):
+        current_user = info.context.user
+
+        if current_user.is_anonymous:
+            raise Exception("Authentication required")
+
+        # Only allow self or admin
+        if str(current_user.id) != str(user_id) and not current_user.is_staff:
+            raise Exception("You are not allowed to delete these posts")
+
+        deleted_count, _ = Post.objects.filter(author_id=user_id).delete()
+
+        return DeleteAllUserPosts(
+            success=True,
+            deleted_count=deleted_count
+        )
+
 class DeletePostMutation(graphene.Mutation):
     """
     Delete a post owned by the current user.
