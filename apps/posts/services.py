@@ -49,7 +49,7 @@ def get_user_feed(user, limit=20, offset=0):
             F('likes_count') * 3 +      # Likes weigh most
             F('comments_count') * 2     # Comments also important
         )
-    ).order_by('-engagement_score', '-created_at')
+    ).order_by('-created_at', '-engagement_score', '-likes_count', '-comments_count')
 
     # Apply pagination
     return queryset[offset:offset + limit]
