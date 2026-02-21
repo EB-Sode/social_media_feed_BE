@@ -19,13 +19,17 @@ services:
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     volumes:
       - .:/app
-      - media_volume:/app/media
+      - media_volume:/app/mediafiles
     ports:
       - "8000:8000"
     env_file:
       - .env
     depends_on:
       - db
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
+
 
   redis:
     image: redis:7
@@ -33,29 +37,36 @@ services:
     ports:
       - "6379:6379"
 
+
   celery:
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: sm_celery
-    command: celery -A core worker --loglevel=INFO
+    command: celery -A social_media_feed worker --loglevel=INFO
     volumes:
       - .:/app
     depends_on:
       - redis
-      - web
+      - sm_web
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
 
   celery_beat:
     build:
       context: .
       dockerfile: docker/Dockerfile
     container_name: sm_celery_beat
-    command: celery -A core beat --loglevel=INFO
+    command: celery -A social_media_feed beat --loglevel=INFO
     volumes:
       - .:/app
     depends_on:
       - redis
       - web
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: 5432
 
 volumes:
   postgres_data:

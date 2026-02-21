@@ -12,7 +12,7 @@ class Post(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="posts"
     )
     content = models.TextField()
-    image = models.ImageField(upload_to="posts/", null=True, blank=True)
+    image = models.URLField(blank=True, null=True, max_length=1000)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

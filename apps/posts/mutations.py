@@ -6,12 +6,11 @@ Each mutation returns the changed object for convenience.
 import graphene
 from graphene_file_upload.scalars import Upload
 from django.shortcuts import get_object_or_404
-from django.conf import settings
-from django.db import IntegrityError
 from .services import create_comment
 from .models import Post, Comment, Like
 from .types import PostType, CommentType
 from django.contrib.auth import get_user_model
+import cloudinary.uploader
 
 User = get_user_model()
 
@@ -23,7 +22,7 @@ class CreatePostMutation(graphene.Mutation):
     post = graphene.Field(PostType)
 
     class Arguments:
-        content = graphene.String(required=True)
+        content = graphene.String(required=False)
         image = Upload(required=False)
 
     def mutate(self, info, content, image=None):
@@ -33,7 +32,10 @@ class CreatePostMutation(graphene.Mutation):
 
         post = Post.objects.create(author=user, content=content)
         if image:
-            post.image = image
+            # Upload to Cloudinary
+            uploaded = cloudinary.uploader.upload(image)
+            post.image = uploaded.get("secure_url")  # ✅ store URL in DB
+
             post.save()
         return CreatePostMutation(post=post)
 
@@ -61,7 +63,8 @@ class UpdatePostMutation(graphene.Mutation):
         if content is not None:
             post.content = content
         if image is not None:
-            post.image = image
+            uploaded = cloudinary.uploader.upload(image)
+            post.image = uploaded.get("secure_url")
         post.save()
         return UpdatePostMutation(post=post)
 
