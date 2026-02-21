@@ -22,3 +22,7 @@ class CustomUser(AbstractUser):
     def followers_count(self):
         return self.followers.count()
     
+class UserImage(models.Model):
+    kind = models.CharField(max_length=20, choices=[("profile","profile"),("cover","cover")])
+    file = models.ImageField(upload_to="user_images/")
+    created_at = models.DateTimeField(auto_now_add=True)

@@ -11,7 +11,7 @@ from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
-from apps.users.mutations import DeleteAllUsersMutation
+from apps.users.mutations import DeleteAllUsersMutation, UpdateUserImages
 from .types import UserType
 
 
@@ -49,6 +49,7 @@ class UserMutation(graphene.ObjectType):
     signup = SignUpMutation.Field()
     login = LoginMutation.Field()
     update_profile = UpdateProfileMutation.Field()
+    update_user_images = UpdateUserImages.Field()
     refresh_token = RefreshTokenMutation.Field()
     delete_all_users = DeleteAllUsersMutation.Field()
 

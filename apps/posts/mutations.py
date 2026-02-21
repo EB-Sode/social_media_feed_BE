@@ -74,6 +74,7 @@ class DeletePostMutation(graphene.Mutation):
     Delete a post owned by the current user.
     """
     success = graphene.Boolean()
+    message = graphene.String()
 
     class Arguments:
         post_id = graphene.ID(required=True) 

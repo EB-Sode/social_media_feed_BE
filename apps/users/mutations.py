@@ -5,6 +5,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from .types import UserType
 from graphql import GraphQLError
+from graphene_file_upload.scalars import Upload
+from .models import UserImage
 
 User = get_user_model()
 
@@ -109,10 +111,11 @@ class UpdateProfileMutation(graphene.Mutation):
         bio = graphene.String()
         email = graphene.String()
         profile_image = graphene.String()  # URL or base64
+        location = graphene.String() 
 
     user = graphene.Field(UserType)
 
-    def mutate(self, info, bio=None, email=None, profile_image=None):
+    def mutate(self, info, bio=None, location=None, email=None, profile_image=None):
         user = info.context.user
         
         if not user.is_authenticated:
@@ -120,6 +123,10 @@ class UpdateProfileMutation(graphene.Mutation):
         
         if bio is not None:
             user.bio = bio
+
+        user.email = email
+        if location is not None:
+            user.location = location 
         
         if email is not None:
             if User.objects.filter(email=email).exclude(id=user.id).exists():
@@ -131,6 +138,38 @@ class UpdateProfileMutation(graphene.Mutation):
         
         user.save()
         return UpdateProfileMutation(user=user)
+    
+class UpdateUserImages(graphene.Mutation):
+    class Arguments:
+        profile = Upload(required=False)
+        cover = Upload(required=False)
+
+    success = graphene.Boolean()
+    message = graphene.String()
+    profile_image = graphene.String()
+    cover_image = graphene.String()
+
+    def mutate(self, info, profile=None, cover=None):
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception("Authentication required")
+
+        if profile:
+            obj = UserImage.objects.create(kind="profile", file=profile)
+            # save relative path like "user_images/xxx.jpg"
+            user.profile_image = obj.file.name
+
+        if cover:
+            obj = UserImage.objects.create(kind="cover", file=cover)
+            user.cover_image = obj.file.name
+
+        user.save()
+        return UpdateUserImages(
+            success=True,
+            message="Updated successfully",
+            profile_image=user.profile_image,
+            cover_image=user.cover_image,
+        )
 
 
 class LogoutMutation(graphene.Mutation):

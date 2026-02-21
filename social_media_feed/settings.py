@@ -18,27 +18,20 @@ import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load .env into os.environ
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / ".env")
+if not os.environ.get("DATABASE_URL"):
+    raise RuntimeError(f"DATABASE_URL not loaded. Looked in: {BASE_DIR / '.env'}")
+
+
 DEBUG = int(os.environ.get("DEBUG", 1))  # 1 = True, 0 = False
 
-if DEBUG:
-    # DEVELOPMENT
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("POSTGRES_DB", "social_media_db"),
-            "USER": os.getenv("POSTGRES_USER", "postgres"),
-            "PASSWORD": os.getenv("POSTGRES_PASSWORD", "testpass222"),
-            "HOST": os.getenv("POSTGRES_HOST", "localhost"),
-            "PORT": os.getenv("POSTGRES_PORT", "5432"),
-        }
-    }
-else:
-    # PRODUCTION
-    DATABASES = {
+DATABASES = {
         "default": dj_database_url.config(
             default=os.environ.get("DATABASE_URL"),
             conn_max_age=600,
-            ssl_require=True
+            ssl_require=not DEBUG
         )
     }
 
