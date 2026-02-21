@@ -7,6 +7,7 @@ from .types import UserType
 from graphql import GraphQLError
 from graphene_file_upload.scalars import Upload
 from .models import UserImage
+import cloudinary.uploader
 
 User = get_user_model()
 
@@ -153,17 +154,17 @@ class UpdateUserImages(graphene.Mutation):
         user = info.context.user
         if user.is_anonymous:
             raise Exception("Authentication required")
-
+        
         if profile:
-            obj = UserImage.objects.create(kind="profile", file=profile)
-            # save relative path like "user_images/xxx.jpg"
-            user.profile_image = obj.file.name
+            uploaded = cloudinary.uploader.upload(profile, folder="users/profile")
+            user.profile_image = uploaded.get("secure_url")
 
         if cover:
-            obj = UserImage.objects.create(kind="cover", file=cover)
-            user.cover_image = obj.file.name
+            uploaded = cloudinary.uploader.upload(cover, folder="users/cover")
+            user.cover_image = uploaded.get("secure_url")
 
         user.save()
+        
         return UpdateUserImages(
             success=True,
             message="Updated successfully",
