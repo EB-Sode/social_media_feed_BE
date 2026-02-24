@@ -1,36 +1,24 @@
+# apps/notifications/tasks.py
+
 from celery import shared_task
-from django.contrib.auth import get_user_model
-from .models import Notification
 from django.core.mail import send_mail
 
-User = get_user_model()
 
-@shared_task
-def send_notification_task(user_id, message):
-    """
-    Celery background task to create a notification for a user.
-    Ideal for async events (likes, follows, new posts)
-    """
-
-    try:
-        user = User.objects.get(id=user_id)
-        Notification.objects.create(user=user, message=message)
-        return True
-    except User.DoesNotExist:
-        return False
-
-
-@shared_task
-def send_notification_email(subject, message, recipient):
+@shared_task(bind=True, max_retries=3, default_retry_delay=10)
+def send_notification_email(self, subject, message, recipient_email):
     """
     Sends an email notification asynchronously using Celery.
-    This keeps the request fast while heavy tasks run in the background.
+    Retries a few times if sending fails.
     """
-    send_mail(
-        subject,
-        message,
-        None,
-        [recipient],
-        fail_silently=False,
-    )
-    return "Email Sent"
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=None,  # uses DEFAULT_FROM_EMAIL if configured
+            recipient_list=[recipient_email],
+            fail_silently=False,
+        )
+        return "Email Sent"
+    except Exception as exc:
+        # retry transient failures
+        raise self.retry(exc=exc)

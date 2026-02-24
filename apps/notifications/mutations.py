@@ -31,19 +31,17 @@ class MarkNotificationAsReadMutation(graphene.Mutation):
 
 class MarkAllNotificationsAsReadMutation(graphene.Mutation):
     success = graphene.Boolean()
-    count = graphene.Int()  # Number of notifications marked as read
-    notifications = graphene.List(lambda: NotificationType)  # All notifications
+    count = graphene.Int()
 
     def mutate(self, info):
-        # Mark all notifications as read
-        notifications = Notification.objects.all()
-        updated_count = notifications.update(is_read=True)
-        
-        return MarkAllNotificationsAsReadMutation(
-            success=True,
-            count=updated_count,
-            notifications=notifications
-        )
+        user = info.context.user
+        if user.is_anonymous:
+            raise Exception("Authentication required")
+
+        qs = Notification.objects.filter(recipient=user, is_read=False)
+        updated_count = qs.update(is_read=True)
+
+        return MarkAllNotificationsAsReadMutation(success=True, count=updated_count)
 
 # Local import
 from .schema import NotificationType

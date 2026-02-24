@@ -8,8 +8,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Post, Like, Comment
 from apps.follows.models import Follow
-from apps.notifications.models import Notification
-from apps.notifications.tasks import send_notification_email
+from apps.notifications.services import create_notification
 
 
 def get_user_feed(user, limit=20, offset=0):
@@ -49,7 +48,7 @@ def get_user_feed(user, limit=20, offset=0):
             F('likes_count') * 3 +      # Likes weigh most
             F('comments_count') * 2     # Comments also important
         )
-    ).order_by('-created_at', '-engagement_score', '-likes_count', '-comments_count')
+    ).order_by('-created_at', '-updated_at', '-engagement_score', '-likes_count', '-comments_count')
 
     # Apply pagination
     return queryset[offset:offset + limit]
@@ -58,84 +57,46 @@ def get_user_feed(user, limit=20, offset=0):
 def toggle_like(post, user):
     """
     Like or unlike a post.
-    If the user already liked the post → unlike it and return False.
-    Otherwise → like it, create notification, and return True.
-    
-    Returns:
-        bool: True if liked, False if unliked
+    Returns True if liked, False if unliked.
     """
     like_obj = Like.objects.filter(post=post, user=user).first()
 
     if like_obj:
-        # Unlike
         like_obj.delete()
         return False
 
-    # Like
     Like.objects.create(post=post, user=user)
-    
-    # Create notification (don't notify yourself)
-    if post.author != user:
-        Notification.objects.create(
-            recipient=post.author,
-            sender=user,
-            notification_type='like',
-            post=post,
-            message=f"{user.username} liked your post"
-        )
-        
-        try:
-            send_notification_email.delay(
-                subject="New Like on Your Post",
-                message=f"{user.username} liked your post: {post.content[:50]}...",
-                recipient_email=post.author.email
-            )
-        except Exception as e:
-            print(f"Failed to send email notification: {e}")
-    
-    return True
 
+    if post.author != user:
+        create_notification(
+            recipient=post.author,
+            actor=user,
+            verb="like",
+            post=post,
+            message="liked your post",
+        )
+
+    return True
 
 def create_comment(post, user, content):
     """
     Create a new comment on a post.
-    Creates notification for post author and sends email.
-    
-    Parameters:
-        post: Post object to comment on
-        user: User creating the comment
-        content: Comment text content
-        
-    Returns:
-        Comment: Created comment object
     """
-    # Create comment
     comment = Comment.objects.create(
         post=post,
         author=user,
         content=content
     )
-    
-    # Create notification (don't notify yourself)
+
     if post.author != user:
-        Notification.objects.create(
+        create_notification(
             recipient=post.author,
-            sender=user,
-            notification_type='comment',
+            actor=user,
+            verb="comment",
             post=post,
-            message=f"{user.username} commented on your post"
+            message="commented on your post",
         )
-        
-        # Optional: Send email notification (async)
-        try:
-            send_notification_email.delay(
-                subject="New Comment on Your Post",
-                message=f"{user.username} commented: {content[:100]}...",
-                recipient_email=post.author.email
-            )
-        except Exception as e:
-            print(f"Failed to send email notification: {e}")
-    
+
     return comment
 
 

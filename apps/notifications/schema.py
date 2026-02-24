@@ -9,6 +9,7 @@ from graphene_django import DjangoObjectType
 from .models import Notification
 
 
+
 class NotificationType(DjangoObjectType):
     class Meta:
         model = Notification
@@ -22,6 +23,15 @@ class NotificationType(DjangoObjectType):
             "is_read",
             "created_at",
         )
+
+        def resolve_createdAt(self, info):
+            return self.created_at
+
+        def resolve_notificationType(self, info):
+            return self.notification_type
+
+        def resolve_isRead(self, info):
+            return self.is_read
 
 
 class NotificationQuery(graphene.ObjectType):

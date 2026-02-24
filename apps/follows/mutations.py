@@ -3,9 +3,8 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 import graphene
 from .types import FollowType
-from .models import Follow
 from .services import follow_user, unfollow_user
-from apps.notifications.models import Notification
+from apps.notifications.services import create_notification
 
 User = get_user_model()
 
@@ -24,7 +23,6 @@ class FollowUserMutation(graphene.Mutation):
 
         followed = get_object_or_404(User, pk=int(user_id))
         
-        # Use the service function
         try:
             follow_obj, created = follow_user(follower, followed)
         except ValidationError as e:
@@ -34,12 +32,13 @@ class FollowUserMutation(graphene.Mutation):
             raise Exception("You are already following this user")
 
         # Create notification
-        Notification.objects.create(
-            recipient=followed,
-            sender=follower,
-            notification_type='follow',
-            message=f"{follower.username} started following you"
-        )
+        if follower != followed:
+            create_notification(
+                recipient=followed,
+                actor=follower,
+                verb="follow",
+                message="started following you",
+            )
 
         return FollowUserMutation(success=True, follow=follow_obj)
 
