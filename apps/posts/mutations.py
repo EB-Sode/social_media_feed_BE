@@ -11,6 +11,7 @@ from .models import Post, Comment, Like
 from .types import PostType, CommentType
 from django.contrib.auth import get_user_model
 import cloudinary.uploader
+from .services import toggle_like
 
 User = get_user_model()
 
@@ -117,11 +118,7 @@ class DeletePostMutation(graphene.Mutation):
 
 
 class LikePostMutation(graphene.Mutation):
-    """
-    Toggles a like for the current user on a post.
-    Returns the post and success status.
-    """
-    success = graphene.Boolean() 
+    success = graphene.Boolean()
     post = graphene.Field(PostType)
     message = graphene.String()
 
@@ -134,33 +131,11 @@ class LikePostMutation(graphene.Mutation):
             raise Exception("Authentication required")
 
         post = get_object_or_404(Post, pk=int(post_id))
-        
-        # Toggle like
-        like, created = Like.objects.get_or_create(user=user, post=post)
-        
-        if not created:
-            # Already liked -> unlike
-            like.delete()
-            message = "Post unliked"
-        else:
-            message = "Post liked"
-            
-            # Create notification for post author
-            if post.author != user:
-                from apps.notifications.models import Notification
-                Notification.objects.create(
-                    recipient=post.author,
-                    sender=user,
-                    notification_type='like',
-                    post=post,
-                    message=f"{user.username} liked your post"
-                )
 
-        return LikePostMutation(
-            success=True,
-            post=post,
-            message=message
-        )
+        liked = toggle_like(post, user)
+        message = "Post liked" if liked else "Post unliked"
+
+        return LikePostMutation(success=True, post=post, message=message)
 
 
 class CreateCommentMutation(graphene.Mutation):

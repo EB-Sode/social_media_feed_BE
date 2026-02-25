@@ -10,7 +10,7 @@ This keeps your code clean, testable, and reusable.
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.conf import settings
-from apps.notifications.tasks import send_notification_task
+from apps.notifications.services import create_notification
 
 User = get_user_model()
 
@@ -34,11 +34,13 @@ def suggest_users_to_follow(current_user, limit=5):
 
     return suggestions
 
+
 def follow_user(follower, target_user):
     """
     Handles the logic of following another user.
     - Creates follow relationship
-    - Sends notification via Celery
+    - Creates notification (single source of truth)
+    - Email is sent async inside notification service
     """
     if follower.id == target_user.id:
         raise ValueError("You cannot follow yourself.")
@@ -49,11 +51,12 @@ def follow_user(follower, target_user):
 
     # Create follow record
     follower.following.create(followed=target_user)
-
-    # Trigger async notification
-    send_notification_task.delay(
-        target_user.id,
-        f"{follower.username} started following you."
+    
+    create_notification(
+        recipient=target_user,
+        actor=follower,
+        verb="follow",
+        message="started following you",
     )
 
     return True
