@@ -11,13 +11,13 @@ User = get_user_model()
 class SearchUserType(DjangoObjectType):
     class Meta:
         model = User
-        fields = ("id", "username", "profile_image", "bio")  # adjust field name
+        fields = ("id", "username", "profile_image", "bio")
 
 
 class SearchPostType(DjangoObjectType):
     class Meta:
         model = Post
-        fields = ("id", "content", "image", "created_at")  # adjust
+        fields = ("id", "content", "image", "created_at") 
 
 
 class SearchHashtagType(DjangoObjectType):
