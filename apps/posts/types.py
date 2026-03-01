@@ -1,6 +1,8 @@
 import graphene
 from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
+
+from apps.users.types import UserType
 from .models import Post, Comment, Like
 
 User = get_user_model()
@@ -8,6 +10,7 @@ User = get_user_model()
 
 class PostType(DjangoObjectType):
     """GraphQL type for Post model."""
+    author = graphene.Field(UserType)
     
     likes_count = graphene.Int()
     comments_count = graphene.Int()

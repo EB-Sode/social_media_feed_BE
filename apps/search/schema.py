@@ -1,69 +1,52 @@
 import graphene
+from django.apps import AppConfig
 from django.contrib.auth import get_user_model
 from graphene_django import DjangoObjectType
-
 from apps.posts.models import Post
 from apps.search.models import Hashtag
-
 User = get_user_model()
-
-
-class SearchUserType(DjangoObjectType):
-    class Meta:
-        model = User
-        fields = ("id", "username", "profile_image", "bio")
-
-
-class SearchPostType(DjangoObjectType):
-    image_url = graphene.String()
-    class Meta:
-        model = Post
-        fields = ("id", "content", "image", "created_at", "author")
-
-    def resolve_image_url(self, info):
-        return self.image
-
-
-class SearchHashtagType(DjangoObjectType):
-    class Meta:
-        model = Hashtag
-        fields = ("id", "name")
-
-
-class SearchResultsType(graphene.ObjectType):
-    users = graphene.List(SearchUserType)
-    posts = graphene.List(SearchPostType)
-    hashtags = graphene.List(SearchHashtagType)
+from .types import SearchUserType, SearchResultsType
 
 
 class SearchQuery(graphene.ObjectType):
     search = graphene.Field(
         SearchResultsType,
         q=graphene.String(required=True),
-        type=graphene.String(required=False),
+        type=graphene.String(required=False, default_value="all"),
         limit=graphene.Int(required=False, default_value=10),
     )
 
-    def resolve_search(self, info, q, type=None, limit=10):
-        q = q.strip()
+    def resolve_search(self, info, q, type="all", limit=10):
+        q = (q or "").strip()
         if not q:
             return SearchResultsType(users=[], posts=[], hashtags=[])
 
-        users_qs = User.objects.none()
-        posts_qs = Post.objects.none()
-        hashtags_qs = Hashtag.objects.none()
+        users = []
+        posts = []
+        hashtags = []
 
-        if type in (None, "all", "users"):
+        # USERS
+        if type in ("all", "users"):
             users_qs = User.objects.filter(username__icontains=q)[:limit]
+            users = [
+                SearchUserType(
+                    id=u.id,
+                    username=u.username,
+                    profile_image=getattr(u, "profile_image", None),
+                    bio=getattr(u, "bio", None),
+                )
+                for u in users_qs
+            ]
 
-        if type in (None, "all", "posts"):
-            posts_qs = Post.objects.filter(content__icontains=q).select_related("author")[:limit]
+        # POSTS
+        if type in ("all", "posts"):
+            posts = list(
+                Post.objects.filter(content__icontains=q)
+                .select_related("author")[:limit]
+            )
 
-        if type in (None, "all", "hashtags"):
-            hashtags_qs = Hashtag.objects.filter(name__icontains=q)[:limit]
+        # HASHTAGS
+        if type in ("all", "hashtags"):
+            hashtags = list(Hashtag.objects.filter(name__icontains=q)[:limit])
 
-        return SearchResultsType(
-            users=list(users_qs),
-            posts=list(posts_qs),
-            hashtags=list(hashtags_qs),
-        )
+        return SearchResultsType(users=users, posts=posts, hashtags=hashtags)
