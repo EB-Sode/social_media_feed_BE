@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "apps.posts",
     "apps.follows",
     "apps.notifications",
+    "apps.search",
 ]
 
 AUTH_USER_MODEL = "users.CustomUser"

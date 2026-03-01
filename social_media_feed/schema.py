@@ -8,6 +8,7 @@ import graphene
 from apps.users.schema import UserQuery, UserMutation
 from apps.posts.schema import PostQuery, PostMutation
 from apps.follows.schema import FollowMutation, FollowQuery
+from apps.search.schema import SearchQuery
 from apps.notifications.schema import NotificationQuery, NotificationMutation
 
 
@@ -17,6 +18,7 @@ class Query(
     PostQuery,            
     NotificationQuery,  
     FollowQuery,
+    SearchQuery,
     graphene.ObjectType
 ):
     """Aggregated Query for the whole service."""
