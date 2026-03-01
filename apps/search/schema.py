@@ -17,7 +17,7 @@ class SearchUserType(DjangoObjectType):
 class SearchPostType(DjangoObjectType):
     class Meta:
         model = Post
-        fields = ("id", "content", "image", "created_at") 
+        fields = ("id", "content", "image", "created_at", "author") 
 
 
 class SearchHashtagType(DjangoObjectType):
