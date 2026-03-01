@@ -15,6 +15,7 @@ class SearchUserType(DjangoObjectType):
 
 
 class SearchPostType(DjangoObjectType):
+    image_url = graphene.String()
     class Meta:
         model = Post
         fields = ("id", "content", "image", "created_at", "author")
