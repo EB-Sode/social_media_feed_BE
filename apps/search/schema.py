@@ -32,7 +32,7 @@ class SearchResultsType(graphene.ObjectType):
     hashtags = graphene.List(SearchHashtagType)
 
 
-class Query(graphene.ObjectType):
+class SearchQuery(graphene.ObjectType):
     search = graphene.Field(
         SearchResultsType,
         q=graphene.String(required=True),
