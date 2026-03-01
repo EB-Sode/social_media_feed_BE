@@ -11,7 +11,7 @@ User = get_user_model()
 class SearchUserType(DjangoObjectType):
     class Meta:
         model = User
-        fields = ("id", "username", "profile_image")  # adjust field name
+        fields = ("id", "username", "profile_image", "bio")  # adjust field name
 
 
 class SearchPostType(DjangoObjectType):
