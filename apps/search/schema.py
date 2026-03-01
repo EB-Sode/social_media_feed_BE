@@ -17,7 +17,10 @@ class SearchUserType(DjangoObjectType):
 class SearchPostType(DjangoObjectType):
     class Meta:
         model = Post
-        fields = ("id", "content", "image", "created_at", "author") 
+        fields = ("id", "content", "image", "created_at", "author")
+
+    def resolve_image_url(self, info):
+        return self.image
 
 
 class SearchHashtagType(DjangoObjectType):
