@@ -1,5 +1,4 @@
-# views.py
-from graphene_django.views import GraphQLView
+
 from graphene_file_upload.django import FileUploadGraphQLView
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
