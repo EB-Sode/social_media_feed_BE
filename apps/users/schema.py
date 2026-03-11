@@ -11,7 +11,7 @@ from graphene_django import DjangoObjectType
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 
-from apps.users.mutations import DeleteAllUsersMutation, UpdateUserImages
+from apps.users.mutations import UpdateUserImages
 from .types import UserType
 
 

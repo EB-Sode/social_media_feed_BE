@@ -1,3 +1,5 @@
+import email
+
 import graphene
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -5,7 +7,6 @@ from rest_framework_simplejwt.exceptions import TokenError
 from .types import UserType
 from graphql import GraphQLError
 from graphene_file_upload.scalars import Upload
-from .models import UserImage
 import cloudinary.uploader
 
 User = get_user_model()
@@ -124,7 +125,9 @@ class UpdateProfileMutation(graphene.Mutation):
         if bio is not None:
             user.bio = bio
 
-        user.email = email
+        if email is not None:
+            user.email = email
+            
         if location is not None:
             user.location = location 
         
@@ -187,21 +190,21 @@ class LogoutMutation(graphene.Mutation):
         except TokenError:
             raise Exception("Invalid or expired refresh token")
         
-class DeleteAllUsersMutation(graphene.Mutation):
-    success = graphene.Boolean()
-    deleted_count = graphene.Int()
+# class DeleteAllUsersMutation(graphene.Mutation):
+#     success = graphene.Boolean()
+#     deleted_count = graphene.Int()
 
-    @classmethod
-    def mutate(cls, root, info):
-        user = info.context.user
+#     @classmethod
+#     def mutate(cls, root, info):
+#         user = info.context.user
 
-        # 🔒 Security check
-        if user.is_anonymous or not user.is_superuser:
-            raise GraphQLError("Not authorized")
+#         # 🔒 Security check
+#         if user.is_anonymous or not user.is_superuser:
+#             raise GraphQLError("Not authorized")
 
-        deleted_count, _ = User.objects.all().delete()
+#         deleted_count, _ = User.objects.all().delete()
 
-        return DeleteAllUsersMutation(
-            success=True,
-            deleted_count=deleted_count
-        )
+#         return DeleteAllUsersMutation(
+#             success=True,
+#             deleted_count=deleted_count
+#         )

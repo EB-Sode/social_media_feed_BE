@@ -2,7 +2,8 @@
 Business logic for Posts, Likes, Comments.
 This layer ensures that GraphQL remains thin and clean.
 """
-
+from unittest import result
+from django.core.cache import cache
 from django.db.models import Q, Count, F
 from django.utils import timezone
 from datetime import timedelta
@@ -25,6 +26,12 @@ def get_user_feed(user, limit=20, offset=0):
         limit: Number of posts to return
         offset: Number of posts to skip (for pagination)
     """
+    cache_key = f"feed:{user.id}:{offset}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+    cache.set(cache_key, result, timeout=60)
+    
     # Get IDs of users the current user follows
     following_ids = Follow.objects.filter(
         follower=user
@@ -48,7 +55,7 @@ def get_user_feed(user, limit=20, offset=0):
             F('likes_count') * 3 +      # Likes weigh most
             F('comments_count') * 2     # Comments also important
         )
-    ).order_by('-created_at', '-updated_at', '-engagement_score', '-likes_count', '-comments_count')
+    ).order_by('-engagement_score', '-created_at', '-updated_at', '-likes_count', '-comments_count')
 
     # Apply pagination
     return queryset[offset:offset + limit]

@@ -35,28 +35,27 @@ def suggest_users_to_follow(current_user, limit=5):
     return suggestions
 
 
-def follow_user(follower, target_user):
-    """
-    Handles the logic of following another user.
-    - Creates follow relationship
-    - Creates notification (single source of truth)
-    - Email is sent async inside notification service
-    """
-    if follower.id == target_user.id:
-        raise ValueError("You cannot follow yourself.")
+# def follow_user(follower, target_user):
+#     """
+#     Handles the logic of following another user.
+#     - Creates follow relationship
+#     - Email is sent async inside notification service
+#     """
+#     if follower.id == target_user.id:
+#         raise ValueError("You cannot follow yourself.")
 
-    # Prevent double-following
-    if follower.following.filter(followed=target_user).exists():
-        return False  # Already following
+#     # Prevent double-following
+#     if follower.following.filter(followed=target_user).exists():
+#         return False 
 
-    # Create follow record
-    follower.following.create(followed=target_user)
+#     # Create follow record
+#     follower.following.create(followed=target_user)
     
-    create_notification(
-        recipient=target_user,
-        actor=follower,
-        verb="follow",
-        message="started following you",
-    )
+#     create_notification(
+#         recipient=target_user,
+#         actor=follower,
+#         verb="follow",
+#         message="started following you",
+#     )
 
-    return True
+#     return True
