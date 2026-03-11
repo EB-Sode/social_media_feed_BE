@@ -1,282 +1,318 @@
-# social_media_feed_BE 📌 Social Media Backend — ProDev Backend Engineering Capstone
+# Social Media Feed — Backend API
 
-A fully-featured social media backend built using Django, GraphQL, PostgreSQL, Docker, and CI/CD pipelines.
-The backend powers real-time social interactions such as posting, liking, following, commenting, and receiving notifications.
+A production-grade social media backend I built to deepen my understanding of scalable system design, async task processing, and GraphQL API architecture. The system handles core social interactions — posting, liking, commenting, following, and real-time notifications — with a focus on clean architecture and performance.
 
-This project demonstrates your ability to design scalable backend systems, implement clean architecture, and apply modern backend engineering practices.
+🔗 **Live API:** `https://social-media-feed-be.onrender.com`
+🔗 **Frontend (Next.js):** `https://social-media-feed-app-five.vercel.app/`
+🔗 **GraphQL Playground:** `https://social-media-feed-be.onrender.com/graphql/` *(interactive, try queries live)*
 
-## Project Features
-*** 1. User Management ***
+---
 
-- Signup, login, logout
+## What I Built & Why
 
-- JWT authentication (GraphQL middleware)
+I wanted to go beyond basic CRUD and tackle the real problems that come with social platforms: feed ranking, notification fanout, image uploads, and background job processing. I chose a social media feed because it forces you to make concrete decisions about performance — a naive feed query joining posts, likes, comments, and follower relationships at scale is immediately painful.
 
-- User profile (bio, profile image, join date)
+The project pushed me to learn how to move expensive work off the request cycle (Celery), cache hot data (Redis), and design a GraphQL schema that doesn't produce N+1 queries by default.
 
-- Follow / Unfollow users
+---
 
-*** 2. Posts & Interactions ***
+## Tech Stack
 
-- Create, update, delete posts
+| Layer | Technology | Why |
+|---|---|---|
+| Backend Framework | Django 4.x | Mature ORM, strong ecosystem, great for rapid iteration |
+| API Style | GraphQL (Graphene-Django) | Feed queries are complex — clients request exactly what they need |
+| Auth | JWT (SimpleJWT) | Stateless, works cleanly with decoupled Next.js frontend |
+| Database | PostgreSQL (Neon) | Relational integrity for social graph; Neon for serverless branching |
+| Cache / Queue Broker | Redis | Feed caching + Celery task broker |
+| Async Tasks | Celery + Celery Beat | Notification emails run off the main request cycle |
+| Image Storage | Cloudinary | Managed CDN, automatic resizing, avoids serving media from Django |
+| Containerization | Docker + Docker Compose | Consistent dev/prod environment; single-command local setup |
+| Web Server | Nginx + Gunicorn + Supervisord | Production-grade process management inside the container |
+| CI/CD | GitHub Actions | Linting, test suite runs on every push |
+| Deployment | Render (backend) + Vercel (frontend) | Zero-infrastructure hosting with Docker support on Render |
 
-- Upload images (optional: S3 or local media)
+---
 
-- Like/unlike posts
+## Core Features
 
-- Comment on posts
+**User Management**
+- Signup, login, logout with JWT access + refresh token flow
+- Custom user model extending `AbstractUser` with bio, location, profile image, cover image
+- Profile updates and image uploads via Cloudinary
 
-- View feed of posts from followed users
+**Posts & Interactions**
+- Create, update, delete posts with optional image upload
+- Like / unlike toggle (idempotent — safe to call twice)
+- Comments with full CRUD
+- All mutations enforce ownership — you can only edit or delete your own content
 
-*** 3. Social Graph ***
+**Social Graph**
+- Follow / unfollow users
+- Followers, following counts with `is_following` / `is_followed_by` context per request
+- Duplicate-follow prevention via `unique_together` constraint
 
-- Track followers and following
+**Feed Algorithm**
+- Pulls posts from followed users + own posts
+- Annotates with engagement score: `likes × 3 + comments × 2`
+- Ordered by recency with engagement as a secondary signal
+- Paginated via `limit` / `offset`
 
-- Suggest users to follow (optional)
+**Notifications**
+- Generated on: likes, comments, follows, mentions
+- Deduplication on `like` and `follow` types — no notification spam
+- Async email delivery via Celery task (non-blocking)
+- Mark as read / mark all as read mutations
 
-- Count followers, following, and engagement
+**Search**
+- Search users by username or bio
+- Search posts by content
+- Search hashtags
+- Single `search` query with a `type` filter (`users`, `posts`, `hashtags`, `all`)
 
-*** 4. Notifications ***
+---
 
-- Receive notifications for:
+## Architecture
 
-- New likes
-
-- New comments
-
-- New followers
-
-- Mark as read/unread
-
-*** 5. GraphQL API ***
-
-- Built using Graphene-Django:
-
-- Query exactly the data you need
-
-- Mutations for all core actions
-
-- GraphQL playground enabled for testing
-
-- Pagination & filtering
-
-*** 6. Infrastructure ***
-
-- Fully containerized with Docker
-
-- Multi-stage Dockerfile
-
-- docker-compose for local development
-
-- Automatic database migrations
-
-*** 7. CI/CD Pipeline ***
-
-Linting + formatting checks
-
-Automated tests
-
-Auto-build Docker containers
-
-Deployment-ready configuration
-
-Optional: GH Actions / Render / Railway
-
-## Project Architecture
-social_media_backend/
-│
-├── .github/
-│   └── workflows/
-│       └── ci.yml                # CI/CD workflow file
-│
+```
+social_media_feed_BE/
+├── apps/
+|   |-- common/         #JWT user authentication
+│   ├── users/          # Auth, profiles
+│   ├── posts/          # Posts, likes, comments
+│   ├── follows/        # Follow relationships + stats
+│   ├── notifications/  # Notification model, async email tasks
+│   └── search/         # Cross-entity search
+├── social_media_feed/
+│   ├── schema.py       # Root GraphQL schema (composes all app schemas)
+│   ├── settings.py
+│   └── urls.py
 ├── docker/
-│   ├── Dockerfile                # Docker image instructions
-│   └── docker-compose.yml        # Multi-service container setup
-│
-├── manage.py
-│
-├── requirements.txt              # All dependencies
-│
-├── .env                          # Environment variables (DB, SECRET_KEY, etc.)
-│
-├── social_media_feed/                       # Django project config folder
-│   ├── __init__.py
-│   ├── asgi.py
-│   ├── settings.py               # Core settings (load from .env)
-│   ├── urls.py                   # Root URL router (GraphQL endpoint)
-│   ├── schema.py                 # Root GraphQL schema combining app schemas
-│   └── wsgi.py
-│
-├── apps/                         # All business logic apps
-│   ├── __init__.py
-│   │
-│   ├── users/                    # Handles user management and auth
-│   │   ├── __init__.py
-│   │   ├── models.py             # User model (CustomUser)
-│   │   ├── schema.py             # GraphQL resolvers for user queries/mutations
-│   │   ├── serializers.py        # If you ever need DRF compatibility
-│   │   ├── mutations.py          # Separate user mutations if preferred
-│   │   ├── signals.py            # Profile creation, etc.
-│   │   ├── types.py
-│   │   └── admin.py
-│   │
-│   ├── posts/                    # Manages posts, comments, and likes
-│   │   ├── __init__.py
-│   │   ├── models.py             # Post, Comment, Like models
-│   │   ├── schema.py             # Post queries & mutations
-│   │   ├── mutations.py
-│   │   ├── services.py           # Helper functions (e.g., fetch_feed())
-│   │   ├── types.py
-│   │   └── admin.py
-│   │
-│   ├── follows/                  # Manages following relationships
-│   │   ├── __init__.py
-│   │   ├── models.py             # Follow model (follower -> followed)
-│   │   ├── schema.py             # Follow mutations (follow/unfollow)
-│   │   ├── services.py
-│   │   ├── types.py
-│   │   └── admin.py
-        
-│   │
-│   └── notifications/ (optional) # If you later add async updates
-│       ├── models.py
-│       ├── tasks.py              # Celery async tasks (send notifications)
-│       ├── schema.py
-│       └── services.py
-│
-├── scripts/                      # Utility scripts
-│   ├── entrypoint.sh             # For Docker setup
-│   └── init_db.sh
-│
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   ├── nginx.conf
+│   ├── supervisord.conf
+│   └── entrypoint.sh
 └── tests/
-    ├── __init__.py
     ├── test_users.py
     ├── test_posts.py
     └── test_follows.py
+```
 
+The major apps follow the same internal structure:
+- `models.py` — data layer only
+- `services.py` — all business logic lives here, not in mutations
+- `mutations.py` — thin layer that calls services and returns GraphQL types
+- `schema.py` — query resolvers
+- `types.py` — GraphQL type definitions
 
-### Why this architecture?
+This separation means business logic is fully testable without going through the GraphQL layer.
 
-- Modular apps → scalable and maintainable
+---
 
-- GraphQL schemas are split per app → clean separation of concerns
+## Key Technical Decisions
 
-- settings/base.py → avoids mixing dev & prod config
+**GraphQL over REST**
 
-- services.py pattern → keeps business logic out of views/mutations
+The feed query is inherently complex — a single screen needs post content, author details, like counts, comment counts, and whether the current user liked each post. With REST that's multiple requests or an over-fetching endpoint. GraphQL lets the client declare exactly what it needs in one round trip.
 
-## Database
-Entities
+Tradeoff I'm aware of: N+1 queries are harder to spot in GraphQL than in REST. I use `select_related` and `prefetch_related` on hot paths, and the next iteration would add DataLoader to fully solve resolver-level N+1s.
 
-User – profile + authentication
+**Services Layer Pattern**
 
-Post – text/image posts by users
+Business logic lives in `services.py`, not in GraphQL mutations. `toggle_like()`, `create_comment()`, `get_user_feed()`, and `create_notification()` are all plain Python functions. This means they can be called from Celery tasks, management commands, or tests without touching GraphQL at all.
 
-Like – relationship between user & post
+**Async Notifications via Celery**
 
-Comment – user’s response to a post
+When a user likes a post or gains a follower, the notification email is dispatched as a Celery task rather than executing synchronously in the mutation. This keeps mutation response time fast regardless of email provider latency. Celery Beat handles any scheduled/recurring tasks.
 
-Follow – follower → followed relationship
+**Notification Deduplication**
 
-Notification – interactions that notify a user
+Like and follow notifications use `get_or_create` — if you like the same post twice (or the like/unlike toggles), only one notification is created, not a stream of duplicates. Comment and mention notifications are always created because each one is a distinct event.
 
-## Tech Stack
-- Layer	Technology
-- Backend Framework	Django / Django Graphene
-- API Style	GraphQL
-- Auth	JWT Authentication
-- Database	PostgreSQL
-- Containerization	Docker & Docker Compose
-- CI/CD	GitHub Actions (or GitLab CI / Render Deploy)
-- Storage	Local media / S3 (optional)
-- Deployment	Render, Railway, AWS, or Docker VPS
+**Engagement Score at the Database Level**
 
-## Setup & Installation
+Rather than pulling posts into Python and sorting there, the feed algorithm uses Django's `annotate()` + `F()` expressions to compute engagement scores in SQL:
 
-1. Clone the repository
-git clone <repository_url>
+```python
+engagement_score = F('likes_count') * 3 + F('comments_count') * 2
+```
+
+This keeps sorting logic in one DB round trip instead of a Python sort over a large queryset.
+
+**Cloudinary for Media**
+
+Images are uploaded directly from Django to Cloudinary. The returned `secure_url` is stored as a URL field on the model. This means the app never stores binary data, serves no media files itself, and gets CDN delivery for free.
+
+---
+
+## Data Model
+
+```
+CustomUser
+  │
+  ├──< Post (author)
+  │     ├──< Like (user, post)
+  │     └──< Comment (author, post)
+  │
+  ├──< Follow (follower → followed)
+  │
+  └──< Notification (recipient, sender, type, post?)
+```
+
+Key constraints:
+- `Like`: `unique_together(user, post)` — prevents double-liking at the DB level
+- `Follow`: `unique_together(follower, followed)` — prevents duplicate follows
+- `Notification`: deduped at application level for `like` and `follow` types
+
+---
+
+## Setup & Local Development
+
+**Prerequisites:** Docker + Docker Compose
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/yourusername/social_media_feed_BE
 cd social_media_feed_BE
 
-2. Create environment variables
-DEBUG=1
-SECRET_KEY=your-secret-key
-DATABASE_URL=postgres://...
+# 2. Set up environment variables
+cp .env.example .env
+# Fill in your values (see .env.example for required keys)
 
-3. Run with Docker
+# 3. Start all services
 docker-compose up --build
 
-4. Apply migrations
+# 4. Run migrations
 docker-compose exec web python manage.py migrate
 
-5. Open GraphQL Playground
-http://localhost:8000/graphql/
+# 5. (Optional) Create a superuser
+docker-compose exec web python manage.py createsuperuser
 
-## GraphQL Example
+# 6. Open GraphQL Playground
+open http://localhost:8000/graphql/
+```
 
-***Use this to query mutation names***
-{
-  "query": "query { __schema { mutationType { fields { name } } } }"
+**Environment variables required:**
+
+```
+SECRET_KEY=
+DEBUG=
+DATABASE_URL=
+REDIS_URL=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+CELERY_BROKER_URL=
+EMAIL_HOST=
+EMAIL_PORT=
+EMAIL_HOST_USER=
+EMAIL_HOST_PASSWORD=
+```
+
+---
+
+## GraphQL Examples
+
+**Sign up and get a token**
+```graphql
+mutation {
+  signup(username: "alice", email: "alice@example.com", password: "secure123") {
+    token
+    refreshToken
+    user { id username }
+  }
 }
+```
 
-Query: Get posts from followed users
+**Get your personalized feed**
+```graphql
 query {
-  feed {
+  feed(limit: 10, offset: 0) {
     id
     content
-    author {
-      username
-    }
+    imageUrl
+    createdAt
+    author { username profileImage }
     likesCount
-    comments {
-      content
-    }
+    commentsCount
+    isLikedByUser
   }
 }
+```
 
-Mutation: Create a Post
+**Like a post**
+```graphql
 mutation {
-  createPost(content: "My first post!") {
-    post {
-      id
-      content
+  likePost(postId: "42") {
+    success
+    message
+    post { likesCount isLikedByUser }
+  }
+}
+```
+
+**Follow a user**
+```graphql
+mutation {
+  followUser(userId: "7") {
+    success
+    follow {
+      follower { username }
+      followed { username }
     }
   }
 }
+```
 
-## Testing
+**Search across users, posts, hashtags**
+```graphql
+query {
+  search(q: "django", type: "all", limit: 5) {
+    users { username profileImage }
+    posts { content createdAt }
+    hashtags { name }
+  }
+}
+```
 
-- Run unit tests with:
+---
 
-- docker-compose exec web pytest
+## Tests
 
-## Core Backend Concepts Demonstrated
+```bash
+# Run the full test suite
+docker-compose exec web pytest
 
-- Clean architecture & modular Django apps
+# With coverage report
+docker-compose exec web pytest --cov=apps --cov-report=term-missing
+```
 
-- GraphQL schema design
+Test coverage includes:
+- User signup, login, duplicate detection, profile updates
+- Post creation, update, delete, ownership enforcement
+- Like toggle (like and unlike)
+- Comment CRUD
+- Follow / unfollow, duplicate follow prevention, self-follow prevention
+- Follow stats queries
+- Unauthenticated access rejection across all protected mutations
 
-- Database modeling & ERD translation
+---
 
-- Authentication & authorization
+## What I'd Do Differently
 
-- CI/CD pipelines
+**DataLoader for N+1 resolution** — In `PostType`, resolvers like `is_liked_by_user` currently hit the database once per post in a feed. DataLoader would batch these into a single query across the whole feed response.
 
-- Dockerized environments
+**Time-decay in the feed ranking** — The current engagement score is computed correctly but recency dominates `ORDER BY`. I'd replace this with a decay formula that blends engagement and age into a single float, closer to how real feed algorithms work.
 
-- Business logic separation using services.py
+**Rate limiting on auth mutations** — `LoginMutation` currently has no brute-force protection. I'd add `django-ratelimit` or a Redis-based attempt counter per IP.
 
-- Production-ready Django configuration
+**Refresh token rotation** — Currently refresh tokens don't rotate. Enabling `ROTATE_REFRESH_TOKENS` in SimpleJWT settings and blacklisting used tokens on logout would close that gap.
 
-## Why This Project Stands Out
+---
 
-*** This capstone shows: ***
+## Author
 
-- Real backend engineering skills
-
-- Understanding of distributed systems
-
-- API design with modern GraphQL patterns
-
-- Knowledge of containerization & CI/CD
-
-- Ability to structure production-grade projects
+**Blessed Sode**
+Backend Engineer · Python / Django / GraphQL
+[GitHub](https://github.com/EB-sode) · [LinkedIn](https://linkedin.com/in/blessedsode) · [Portfolio](https://sode.dev)
